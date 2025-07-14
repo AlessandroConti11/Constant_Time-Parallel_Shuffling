@@ -7,7 +7,7 @@
  *
  * @param list the pairList to initialize.
  */
-static void pairlist_init(PairList *list) {
+void pairlist_init(PairList *list) {
     list->list = NULL;
     list->listSize = 0;
     list->listCapacity = 0;
@@ -21,7 +21,7 @@ static void pairlist_init(PairList *list) {
  * @param list the pairList.
  * @param minimumCapacity the minimum capacity required.
  */
-static void pairlist_reserve(PairList *list, size_t minimumCapacity) {
+void pairlist_reserve(PairList *list, size_t minimumCapacity) {
     if(minimumCapacity > list->listCapacity) {
         size_t c = list->listCapacity ? list->listCapacity : 1;
 
@@ -41,7 +41,7 @@ static void pairlist_reserve(PairList *list, size_t minimumCapacity) {
  * @param elementIndex0 the index0 of the element to append.
  * @param elementIndex1 the index1 of the element to append.
  */
-static void pairlist_append(PairList *list, int elementIndex0, int elementIndex1) {
+void pairlist_append(PairList *list, int elementIndex0, int elementIndex1) {
     pairlist_reserve(list, list->listSize + 1);
 
     list->list[list->listSize].index0 = elementIndex0;
@@ -58,7 +58,7 @@ static void pairlist_append(PairList *list, int elementIndex0, int elementIndex1
  * @param elementIndex0 the index0 of the element to append.
  * @param elementIndex1 the index1 of the element to append.
  */
-static void pairlist_insert(PairList *list, size_t position, int elementIndex0, int elementIndex1) {
+void pairlist_insert(PairList *list, size_t position, int elementIndex0, int elementIndex1) {
     assert(position <= list->listSize);
 
     pairlist_reserve(list, list->listSize + 1);
@@ -75,7 +75,7 @@ static void pairlist_insert(PairList *list, size_t position, int elementIndex0, 
  * @param listDestination the destination pairList.
  * @param listSource the source pairList.
  */
-static void pairlist_copy(PairList *listDestination, const PairList *listSource) {
+void pairlist_copy(PairList *listDestination, const PairList *listSource) {
     listDestination->listSize=listSource->listSize;
     listDestination->listCapacity=listSource->listSize;
     listDestination->list= listSource->listSize ? malloc(listSource->listSize * sizeof*listSource->list) : NULL;
@@ -90,7 +90,7 @@ static void pairlist_copy(PairList *listDestination, const PairList *listSource)
  *
  * @param list the pairList.
  */
-static void pairlist_free(PairList *list) {
+void pairlist_free(PairList *list) {
     free(list->list);
     pairlist_init(list);
 }
