@@ -2,7 +2,7 @@
 
 
 /**
- * Initialize the intList list.
+ * Function that initializes the intList.
  *
  * @param list the intList to initialize.
  */
@@ -13,7 +13,7 @@ static void intlist_init(IntList *list) {
 }
 
 /**
- * This function ensures that the internal capacity of the intList is at least minCapacity.
+ * Function that ensures that the internal capacity of the intList is at least minCapacity.
  *
  * @note the capacity is always increased to powers of two for efficiency.
  *
@@ -29,12 +29,13 @@ static void intlist_reserve(IntList *list, size_t minimumCapacity) {
             capacity <<= 1;
         }
 
-        list->list = safeRealloc(list->list, capacity * sizeof *list->list); list->listCapacity=capacity;
+        list->list = safeRealloc(list->list, capacity * sizeof *list->list);
+        list->listCapacity = capacity;
     }
 }
 
 /**
- * Function that append a new element in the list.
+ * Function that appends a new element in the list.
  *
  * @param list the intList.
  * @param element the element to append.
@@ -43,10 +44,12 @@ static void intlist_append(IntList *list, int element) {
     intlist_reserve(list, list->listSize + 1);
 
     list->list[list->listSize++] = element;
+
+    ++list->listSize;
 }
 
 /**
- * Function that insert a new element in a specific position in the list.
+ * Function that inserts a new element in a specific position in the intlist.
  *
  * @param list the intList.
  * @param position the position where the element must be inserted.
@@ -63,7 +66,7 @@ static void intlist_insert(IntList *list, size_t position, int element) {
 }
 
 /**
- * function that copies the source intList to a destination.
+ * Function that copies the source intList to a destination.
  *
  * @param listDestination the destination intList.
  * @param listSource the source intList.
