@@ -15,7 +15,7 @@ void intlist_init(IntList *list) {
 /**
  * Function that ensures that the internal capacity of the intList is at least minCapacity.
  *
- * @note the capacity is always increased to powers of two for efficiency.
+ * @note The capacity is always increased to powers of two for efficiency.
  *
  * @param list the intList.
  * @param minimumCapacity the minimum capacity required.
@@ -57,7 +57,7 @@ void intlist_insert(IntList *list, size_t position, int element) {
     assert(position <= list->listSize);
 
     intlist_reserve(list, list->listSize + 1);
-    memmove(list->list + position + 1, list->list + position, (list->listSize - position) * sizeof*list->list);
+    memmove(list->list + position + 1, list->list + position, (list->listSize - position) * sizeof * list->list);
 
     list->list[position] = element;
     ++list->listSize;
