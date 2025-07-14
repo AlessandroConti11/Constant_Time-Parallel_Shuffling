@@ -1,6 +1,0 @@
-#ifndef CRYPTOGRAPHY_LIBRARY_H
-#define CRYPTOGRAPHY_LIBRARY_H
-
-void hello(void);
-
-#endif //CRYPTOGRAPHY_LIBRARY_H

@@ -6,4 +6,8 @@ set(CMAKE_C_STANDARD 11)
 add_library(djb STATIC insertionSeries.c
         ciao.c
         utility/intList.c
-        utility/intList.h)
+        utility/intList.h
+        utility/tuple.h
+        utility/pairList.c
+        utility/pairList.h
+        utility/safeRealloc.h)
