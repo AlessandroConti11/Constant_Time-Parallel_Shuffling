@@ -183,10 +183,10 @@ PairList insertionseries_sort_recursive(const PairList *pairList) {
     pairlist_init(&right);
     pairlist_reserve(&right, pairListSize - halfPairListSize);
 
-    for(size_t i=0; i < halfPairListSize; ++i) {
+    for(size_t i = 0; i < halfPairListSize; ++i) {
         pairlist_append(&left, pairList->list[i].index0, pairList->list[i].index1);
     }
-    for(size_t i=halfPairListSize; i < pairListSize; ++i) {
+    for(size_t i = halfPairListSize; i < pairListSize; ++i) {
         pairlist_append(&right, pairList->list[i].index0, pairList->list[i].index1);
     }
 
