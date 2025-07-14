@@ -16,7 +16,8 @@ void *safeRealloc(void *pointerToRealloc, size_t reallocSize) {
 
 
     if (!newPointer) {
-        perror("realloc"); exit(EXIT_FAILURE);
+        perror("realloc");
+        exit(EXIT_FAILURE);
     }
 
     return newPointer;
