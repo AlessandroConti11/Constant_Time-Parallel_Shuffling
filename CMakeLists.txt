@@ -3,13 +3,13 @@ project(djb C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(djb #insertionSeries.c
-        ciao.c
-        insertionSeries.h
+add_executable(djb
+        main.c
+        insertion_series/insertionSeries.c
+        insertion_series/insertionSeries.h
         utility/intList.c
         utility/intList.h
-#        utility/tuple.h
         utility/pairList.c
         utility/pairList.h
-#        utility/safeRealloc.h
+        utility/safeRealloc.c
 )
