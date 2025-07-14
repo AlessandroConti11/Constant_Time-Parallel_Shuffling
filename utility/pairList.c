@@ -23,14 +23,15 @@ void pairlist_init(PairList *list) {
  */
 void pairlist_reserve(PairList *list, size_t minimumCapacity) {
     if(minimumCapacity > list->listCapacity) {
-        size_t c = list->listCapacity ? list->listCapacity : 1;
+        /// The list capacity.
+        size_t capacity = list->listCapacity ? list->listCapacity : 1;
 
-        while(c < minimumCapacity) {
-            c<<=1;
+        while(capacity < minimumCapacity) {
+            capacity<<=1;
         }
 
-        list->list = safeRealloc(list->list, c * sizeof *list->list);
-        list->listCapacity = c;
+        list->list = safeRealloc(list->list, capacity * sizeof *list->list);
+        list->listCapacity = capacity;
     }
 }
 
@@ -64,8 +65,8 @@ void pairlist_insert(PairList *list, size_t position, int elementIndex0, int ele
     pairlist_reserve(list, list->listSize + 1);
     memmove(list->list + position + 1, list->list + position, (list->listSize - position) * sizeof*list->list);
 
-    list->list[position].index0=elementIndex0;
-    list->list[position].index1=elementIndex1;
+    list->list[position].index0 = elementIndex0;
+    list->list[position].index1 = elementIndex1;
     ++list->listSize;
 }
 
@@ -76,9 +77,9 @@ void pairlist_insert(PairList *list, size_t position, int elementIndex0, int ele
  * @param listSource the source pairList.
  */
 void pairlist_copy(PairList *listDestination, const PairList *listSource) {
-    listDestination->listSize=listSource->listSize;
-    listDestination->listCapacity=listSource->listSize;
-    listDestination->list= listSource->listSize ? malloc(listSource->listSize * sizeof*listSource->list) : NULL;
+    listDestination->listSize = listSource->listSize;
+    listDestination->listCapacity = listSource->listSize;
+    listDestination->list = listSource->listSize ? malloc(listSource->listSize * sizeof*listSource->list) : NULL;
 
     if(listSource->listSize) {
         memcpy(listDestination->list, listSource->list, listSource->listSize * sizeof *listSource->list);
