@@ -1,5 +1,6 @@
 #include "insertionSeries.h"
 
+
 /**
  * Function that computes the cumulative prefixes of an intList.
  *
@@ -56,6 +57,29 @@ int quadrupleComparison(const void *firstQuadruple, const void *secondQuadruple)
 }
 
 /**
+ * Function that merge and sort two list of quadruple.
+ *
+ * @param firstList the first list of quadruple.
+ * @param firstListSize the size of the first list of quadruple.
+ * @param secondList the second list of quadruple.
+ * @param secondListSize the size of the second list of quadruple.
+ * @return
+ */
+Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
+    /// The size of the new list of quadruple.
+    size_t resultSize = firstListSize + secondListSize;
+    /// The new array of quadruple that contains the quadruple of the first and the second input list.
+    Quadruple *result = malloc(resultSize * sizeof * result);
+
+    // merge(L, R) = copy the first; copy the second; sort
+    memcpy(result, firstList, firstListSize * sizeof * result);
+    memcpy(result + firstListSize, secondList, secondListSize * sizeof * result);
+    qsort(result, resultSize, sizeof * result, quadrupleComparison);
+
+    return result;
+}
+
+/**
  * Function that performs an ordered merging of two pairLists.
  *
  * @param firstList the first pairList.
@@ -90,12 +114,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// The size of the new list of quadruple.
     size_t newQuadrupleArraySize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *newQuadrupleArray = malloc(newQuadrupleArraySize * sizeof * newQuadrupleArray);
-
-    // merge(L, R) = copy the first; copy the second; sort
-    memcpy(newQuadrupleArray, firstListQuadrupleArray, firstListSize * sizeof*newQuadrupleArray);
-    memcpy(newQuadrupleArray + firstListSize, secondListQuadrupleArray, secondListSize * sizeof*newQuadrupleArray);
-    qsort(newQuadrupleArray, newQuadrupleArraySize, sizeof * newQuadrupleArray, quadrupleComparison);
+    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize);
 
     // let us compute the correct offsetList to add to newQuadrupleArray.index0
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
@@ -103,26 +122,21 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     intlist_init(&fromLeftInverse);
     intlist_reserve(&fromLeftInverse, newQuadrupleArraySize);
 
-    for(size_t i=0; i < newQuadrupleArraySize; ++i) {
+    for(size_t i = 0; i < newQuadrupleArraySize; ++i) {
         intlist_append(&fromLeftInverse, 1 - newQuadrupleArray[i].fromLeft);
     }
 
     /// The list of true offset to add at each element of newQuadrupleArray.index0.
     IntList offsetList = prefixSum(&fromLeftInverse);
 
-    /* Step‑4: produce final PairList */
     /// The output pairList.
     PairList result;
     pairlist_init(&result);
     pairlist_reserve(&result, newQuadrupleArraySize);
 
-    for(size_t i=0; i < newQuadrupleArraySize; ++i) {
+    for(size_t i = 0; i < newQuadrupleArraySize; ++i) {
         size_t position = newQuadrupleArray[i].index0 + offsetList.list[i];
 
-        if(position <= 0 || position > newQuadrupleArraySize) {
-            fprintf(stderr, "Error: computed insertion index %zu out of bounds [0, %zu]\n", position, newQuadrupleArraySize);
-            exit(EXIT_FAILURE);
-        }
         pairlist_append(&result, newQuadrupleArray[i].index0 + offsetList.list[i], newQuadrupleArray[i].index1);
     }
 

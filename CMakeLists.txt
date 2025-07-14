@@ -12,4 +12,6 @@ add_executable(djb
         utility/pairList.c
         utility/pairList.h
         utility/safeRealloc.c
+        constant_weight_words/cww.c
+        constant_weight_words/cww.h
 )

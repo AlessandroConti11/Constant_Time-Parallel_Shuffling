@@ -15,8 +15,8 @@
 
 int quadrupleComparison(const void *firstQuadruple, const void *secondQuadruple);
 
-
 IntList prefixSum(const IntList *list);
+Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize);
 PairList insertionseries_sort_merge(const PairList *firstList, const PairList *secondList);
 PairList insertionseries_sort_recursive(const PairList *pairList);
 IntList insertionseries_merge_after_sort_recursive(const IntList *list, const PairList *pairList);
