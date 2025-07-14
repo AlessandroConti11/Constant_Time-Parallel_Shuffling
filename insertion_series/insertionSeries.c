@@ -135,8 +135,6 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     pairlist_reserve(&result, newQuadrupleArraySize);
 
     for(size_t i = 0; i < newQuadrupleArraySize; ++i) {
-        size_t position = newQuadrupleArray[i].index0 + offsetList.list[i];
-
         pairlist_append(&result, newQuadrupleArray[i].index0 + offsetList.list[i], newQuadrupleArray[i].index1);
     }
 
@@ -217,7 +215,7 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
     PairList listPair;
     pairlist_init(&listPair);
 
-    for(size_t i=0; i < list->listSize; ++i) {
+    for(size_t i = 0; i < list->listSize; ++i) {
         pairlist_append(&listPair, (int) i, list->list[i]);
     }
 
