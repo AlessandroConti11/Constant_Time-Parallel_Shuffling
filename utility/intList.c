@@ -44,8 +44,6 @@ void intlist_append(IntList *list, int element) {
     intlist_reserve(list, list->listSize + 1);
 
     list->list[list->listSize++] = element;
-
-    ++list->listSize;
 }
 
 /**
