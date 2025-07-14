@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <time.h>
 
+#include "safeRealloc.h"
+
 
 typedef struct {
     int *list;
@@ -15,8 +17,6 @@ typedef struct {
     size_t listCapacity;
 } IntList;
 
-
-static void *safeRealloc(void *pointerToRealloc, size_t reallocSize);
 
 static void intlist_init(IntList *list);
 static void intlist_reserve(IntList *list, size_t minimumCapacity);
