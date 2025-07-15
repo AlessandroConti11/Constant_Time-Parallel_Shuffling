@@ -2,32 +2,6 @@
 
 
 /**
- * Function that computes the cumulative prefixes of an intList.
- *
- * @note The first element is always 0.
- *
- * @param list the intList.
- * @return the new list that has size input list + 1, where all element is the sum of all previous elements of the input list.
- */
-IntList prefixSum(const IntList *list) {
-    /// The result.
-    IntList result;
-    intlist_init(&result);
-    intlist_reserve(&result, list->listSize + 1);
-
-    /// The partial sum of each element.
-    int sum = 0;
-
-    intlist_append(&result, 0);
-    for(size_t i=0; i < list->listSize; ++i) {
-        sum += list->list[i];
-        intlist_append(&result, sum);
-    }
-
-    return result;
-}
-
-/**
  * Function that compares two quadruple.
  *
  * @note The comparison compare the following quadruple's value:
@@ -57,13 +31,150 @@ int quadrupleComparison(const void *firstQuadruple, const void *secondQuadruple)
 }
 
 /**
+ * Function that search the position of a key.
+ *
+ * @param list the list where to look for the key.
+ * @param start the position from which to start searching for the key.
+ * @param end the position to search for the key.
+ * @param key the key to search.
+ * @return the position of the key.
+ */
+size_t binarySearch(Quadruple *list, size_t start, size_t end, Quadruple key) {
+    /// The low index.
+    size_t low = start;
+    /// The high index.
+    size_t high = end;
+
+    while (low < high) {
+        /// The mid position.
+        size_t mid = low + (high - low) / 2;
+
+        if (quadrupleComparison(&list[mid], &key) < 0) {
+            low = mid + 1;
+        }
+        else {
+            high = mid;
+        }
+    }
+
+    return low;
+}
+
+
+/**
+ * Function that computes the cumulative prefixes of an intList.
+ *
+ * @note The first element is always 0.
+ *
+ * @param list the intList.
+ * @return the new list that has size input list + 1, where all element is the sum of all previous elements of the input list.
+ */
+IntList prefixSum(const IntList *list) {
+    /// The result.
+    IntList result;
+    intlist_init(&result);
+    intlist_reserve(&result, list->listSize + 1);
+
+    /// The partial sum of each element.
+    int sum = 0;
+
+    intlist_append(&result, 0);
+    for(size_t i=0; i < list->listSize; ++i) {
+        sum += list->list[i];
+        intlist_append(&result, sum);
+    }
+
+    return result;
+}
+
+/**
+ * Function that computes the cumulative prefixes of an intList.
+ *
+ * @note The first element is always 0.
+ * @note Parallel version.
+ *
+ * @param list the intList.
+ * @return the new list that has size input list + 1, where all element is the sum of all previous elements of the input list.
+ */
+IntList prefixSumParallel(const IntList *list) {
+    /// The result.
+    IntList result;
+    intlist_init(&result);
+    intlist_reserve(&result, list->listSize + 1);
+
+    /// List size.
+    size_t listSize = list->listSize;
+    /// Output list.
+    int *output = malloc((listSize + 1) * sizeof(int));
+    output[0] = 0;
+
+    /// Number of threads used.
+    int numberThreadUsed = 0;
+    /// List of partial sum.
+    int *partialSumList = NULL;
+
+    // First pass: local prefix sums
+#pragma omp parallel
+    {
+        /// Thread ID.
+        int threadID = omp_get_thread_num();
+        /// Number of thread.
+        int numberThread = omp_get_num_threads();
+
+#pragma omp single
+        {
+            numberThreadUsed = numberThread;
+            partialSumList = calloc(numberThreadUsed, sizeof(int));
+        }
+
+        /// Chunk per thread.
+        size_t chunk = (listSize + numberThread - 1) / numberThread;
+        /// Start position.
+        size_t start = threadID * chunk;
+        /// End position.
+        size_t end = (start + chunk < listSize) ? start + chunk : listSize;
+
+        /// Local sum value.
+        int localSum = 0;
+
+        for (size_t i = start; i < end; ++i) {
+            localSum += list->list[i];
+            output[i + 1] = localSum;
+        }
+        partialSumList[threadID] = localSum;
+
+#pragma omp barrier
+
+        /// Offset used to insert thread results into the output list.
+        int offset = 0;
+
+        for (int i = 0; i < threadID; ++i) {
+            offset += partialSumList[i];
+        }
+
+        for (size_t i = start + 1; i <= end; ++i) {
+            output[i] += offset;
+        }
+    }
+
+    for (size_t i = 0; i <= listSize; ++i) {
+        intlist_append(&result, output[i]);
+    }
+
+    free(output);
+    free(partialSumList);
+    return result;
+}
+
+
+/**
  * Function that merge and sort two list of quadruple.
  *
  * @param firstList the first list of quadruple.
  * @param firstListSize the size of the first list of quadruple.
  * @param secondList the second list of quadruple.
  * @param secondListSize the size of the second list of quadruple.
- * @return
+ * @return the ordered union of the two input lists.
  */
 Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
     /// The size of the new list of quadruple.
@@ -78,6 +189,41 @@ Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondLi
 
     return result;
 }
+
+/**
+ * Merge two sorted arrays of Quadruple into a single sorted array.
+ *
+ * @note The two list must be already be sorted.
+ * @note Parallel version.
+ *
+ * @param firstList the first list of quadruple.
+ * @param firstListSize the size of the first list of quadruple.
+ * @param secondList the second list of quadruple.
+ * @param secondListSize the size of the second list of quadruple.
+ * @return the ordered union of the two input lists.
+ */
+Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
+    /// The size of the new list of quadruple.
+    size_t resultSize = firstListSize + secondListSize;
+    /// The new array of quadruple that contains the quadruple of the first and the second input list.
+    Quadruple *result = malloc(resultSize * sizeof(Quadruple));
+
+#pragma omp parallel
+    {
+#pragma omp for schedule(static) nowait
+        for (size_t i = 0; i < firstListSize; i++) {
+            result[i + binarySearch(secondList, 0, secondListSize, firstList[i])] = firstList[i];
+        }
+
+#pragma omp for schedule(static)
+        for (size_t i = 0; i < secondListSize; i++) {
+            result[i + binarySearch(firstList, 0, firstListSize, secondList[i])] = secondList[i];
+        }
+    }
+
+    return result;
+}
+
 
 /**
  * Function that performs an ordered merging of two pairLists.
@@ -114,7 +260,8 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// The size of the new list of quadruple.
     size_t newQuadrupleArraySize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize);
+    Quadruple *newQuadrupleArray = mergeParallel(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize);
+//    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize);
 
     // let us compute the correct offsetList to add to newQuadrupleArray.index0
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
@@ -127,7 +274,8 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     }
 
     /// The list of true offset to add at each element of newQuadrupleArray.index0.
-    IntList offsetList = prefixSum(&fromLeftInverse);
+    IntList offsetList = prefixSumParallel(&fromLeftInverse);
+//    IntList offsetList = prefixSum(&fromLeftInverse);
 
     /// The output pairList.
     PairList result;
