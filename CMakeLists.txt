@@ -13,3 +13,8 @@ add_executable(djb
         utility/pairList.h
         utility/safeRealloc.c
 )
+
+find_package(OpenMP REQUIRED)
+if(OpenMP_C_FOUND)
+    target_link_libraries(djb PRIVATE OpenMP::OpenMP_C)
+endif()

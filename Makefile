@@ -3,7 +3,7 @@ EXECUTABLE = djb
 
 # Compiler
 CC = gcc
-CFLAGS = -std=c11 -Wall -Werror -Wextra -O2
+CFLAGS = -std=c11 -Wall -Werror -Wextra -O2 -fopenmp
 
 # Source directories
 SRC_DIRS = utility \
