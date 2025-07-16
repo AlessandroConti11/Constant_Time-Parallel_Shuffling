@@ -113,7 +113,6 @@ IntList prefixSumParallel(const IntList *list) {
     /// List of partial sum.
     int *partialSumList = NULL;
 
-    // First pass: local prefix sums
 #pragma omp parallel
     {
         /// Thread ID.
@@ -207,6 +206,9 @@ Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *
     size_t resultSize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
     Quadruple *result = malloc(resultSize * sizeof(Quadruple));
+    if (!result) {
+        return NULL;
+    }
 
 #pragma omp parallel
     {
