@@ -338,17 +338,13 @@ PairList insertionseries_sort_recursive(const PairList *pairList) {
         pairlist_append(&right, pairList->list[i].index0, pairList->list[i].index1);
     }
 
-    /// The left pairList sorted.
-    PairList leftSort = insertionseries_sort_recursive(&left);
-    /// The right pairList sorted.
-    PairList rightSort = insertionseries_sort_recursive(&right);
+    left = insertionseries_sort_recursive(&left);
+    right = insertionseries_sort_recursive(&right);
     /// The sorted pairList.
-    PairList result = insertionseries_sort_merge(&leftSort, &rightSort);
+    PairList result = insertionseries_sort_merge(&left, &right);
 
     pairlist_free(&left);
     pairlist_free(&right);
-    pairlist_free(&leftSort);
-    pairlist_free(&rightSort);
 
     return result;
 }
