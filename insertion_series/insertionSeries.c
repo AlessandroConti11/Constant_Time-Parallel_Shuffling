@@ -202,10 +202,8 @@ Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondLi
  * @return the ordered union of the two input lists.
  */
 Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
-    /// The size of the new list of quadruple.
-    size_t resultSize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *result = malloc(resultSize * sizeof(Quadruple));
+    Quadruple *result = malloc(firstListSize + secondListSize * sizeof(Quadruple));
     if (!result) {
         return NULL;
     }
