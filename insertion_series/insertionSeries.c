@@ -162,6 +162,7 @@ IntList prefixSumParallel(const IntList *list) {
 
     free(output);
     free(partialSumList);
+
     return result;
 }
 
