@@ -6,7 +6,7 @@ Author: Alessandro Conti - [AlessandroConti11](https://github.com/AlessandroCont
 License: [MIT license](LICENSE).
 
 
-Tags: `#computer_engineering`, `#computer_science_and_engineering`, `#cryptography`, `#polimi`.
+Tags: `#c`, `#complexity_study`, `#computer_engineering`, `#computer_science_and_engineering`, `#cryptography`, `#cryptography_and_architecture_for_computer_security`, `#daniel_j_bernstein`, `#djb`, `#insertion_in_array`, `#insertion_series`, `#polimi`, `#porting`, `#python_to_c`.
 
 
 ## University
