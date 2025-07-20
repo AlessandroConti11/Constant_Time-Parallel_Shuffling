@@ -22,11 +22,76 @@ Academic Year: 2024/2025.
 
 Shuffling arrays in constant time is a common problem in modern cryptography. This project involves analyzing the technique proposed in https://cr.yp.to/2024/insertionseries-20240515.py, and implementing it in C, possibly employing parallelization.
 
+In this repository is the C porting of the insertionSeries algorithm implemented by Daniel J. Bernstein in python while also studying its complexities.
+
 
 ## How to run
 
 The steps below refer to a Unix environment, for other environments the commands may change.
 
+0. install gcc
+    ```bash
+    sudo apt-get install gcc 
+    ```
+1. compile each source file into an object file
+    ```bash
+    gcc -std=c11 -Wall -Werror -Wextra -O2 -fopenmp -c FILE.c -o FILE.o
+    ```
+2. link all object files into an executable
+    ```bash
+    g++ -std=c11 -Wall -Werror -Wextra -O2 -fopenmp\
+    main.o \
+    utility/intList.o \
+    utility/pairList.o \
+    utility/safeRealloc.o \
+    insertion_series/insertionSeries.o \
+    -o EXECUTABLE
+    ```
+3. run the executable
+    ```bash
+    ./EXECUTABLE
+    ```
+
+<br>
+
+The Makefile in the repository can also be used to compile the code.
+- this option allows you to compile with the following tags: *-std=c11 -Wall -Werror -Wextra -O2 -fopenmp*
+    ```bash
+    make
+    ```
+- if you want to specify different tags, you can set them
+   ```bash
+   make compile CXXFLAGS=YOUR_FLAGS
+   ```
+- if you want to remove all .o files and the final executable
+    ```bash
+    make clean
+    ```
+
+<br>
+
+The CMakeLists.txt in the repository can also be used to compile the code.
+
+0. install cmake
+    ```bash
+    sudo apt-get install cmake
+    ```
+1. create the build folder
+    ```bash
+    mkdir build && cd build
+    ```
+2. generate compilation files
+    ```bash
+    cmake ..
+    ```
+3. build the project
+    ```bash
+    cmake --build .
+    ```
+4. run the executable
+    ```bash
+    ./djb
+    ```
 
 ## Contribute
 
