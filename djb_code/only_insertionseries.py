@@ -259,30 +259,33 @@ def insertionseries_test():
 
 
 
-# ===== Main interattivo =========================================
-#
-# Come si usa:
-#   $ python3 insertionseries.py
-#
-# 1. Inserisci gli elementi di L separati da spazi (es. "10 20 30").
-# 2. Inserisci le coppie X Y una per riga (es. "0 99"), premi Invio a
-#    riga vuota per terminare.
-# 3. Il programma stampa:
-#      • la lista risultante dopo tutte le inserzioni
-#      • la lista (x',y) restituita da insertionseries_sort (facoltativo)
+# ===== Interactive Main
+
 
 def _read_int_list(prompt):
-    """Ritorna una lista di interi letti da input()."""
+    """
+    Function that returns a list of integers entered by the user.
+
+    :param prompt: the message displayed to the user when requesting input.
+    :return: a list of integer.
+    """
+
     line = input(prompt).strip()
     if not line:
         return []
     return [int(tok) for tok in line.split()]
 
 def _read_pairs():
-    """Legge righe 'x y' finché l’utente dà Invio a riga vuota."""
+    """
+    Function that reads the pair position, value to insert.
+
+    :return: the list of pair.
+    """
+
     pairs = []
-    print("Inserisci le coppie X Y (posizione valore), una per riga; "
-          "Invio su riga vuota per finire.")
+    print("Insert the pair <position, value>, one per row;\n"
+          "Click enter on an empty row to stop the procedure.\n")
+
     while True:
         line = input("> ").strip()
         if line == "":
@@ -291,40 +294,44 @@ def _read_pairs():
             x_str, y_str = line.split()
             pairs.append((int(x_str), int(y_str)))
         except ValueError:
-            print("⚠️  Formato non valido: devi scrivere due interi separati da spazi.")
+            print("Not a valid format")
     return pairs
 
+
 def main():
-    print("=== Inserimento serie di inserzioni ===")
-    L = _read_int_list("Lista iniziale L (numeri separati da spazi): ")
+    print("Insertion Series of DJB")
+    L = _read_int_list("Insert the list (number space separated):\n")
+
+    print(f"\nThe list after all the insertion\n{L}")
+
     XY = _read_pairs()
 
     try:
         result = insertionseries(L, XY)
     except AssertionError:
-        print("\n❌  Errore: qualche coppia X è fuori intervallo.")
+        print("\nSome pair is outside the range.")
         return
 
-    print("\nRisultato dopo le inserzioni:")
+
+    print("\nThe list after all the insertion:")
     print(result)
 
-    # Facoltativo: mostra anche le posizioni finali calcolate da insertionseries_sort
     S = insertionseries_sort(XY)
-    print("\nPosizioni finali (x', y) calcolate da insertionseries_sort:")
+    print("\nFinal positions:")
     for x, y in S:
-        print(f"pos {x}: {y}")
+        print(f"position {x}: {y}")
 
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Esegue la serie di inserzioni oppure i test interni."
+        description="Executes the series of insertions or internal tests."
     )
     parser.add_argument(
         '--test',
         action='store_true',
-        help="Esegue insertionseries_test() invece del main interattivo"
+        help="Runs tests instead of the interactive main"
     )
     args = parser.parse_args()
 
