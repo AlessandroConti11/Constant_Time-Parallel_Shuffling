@@ -22,7 +22,8 @@ Academic Year: 2024/2025.
 
 Shuffling arrays in constant time is a common problem in modern cryptography. This project involves analyzing the technique proposed in https://cr.yp.to/2024/insertionseries-20240515.py, and implementing it in C, possibly employing parallelization.
 
-In this repository is the C porting of the insertionSeries algorithm implemented by Daniel J. Bernstein in python while also studying its complexities.
+This repository contains the C porting of the insertionSeries algorithm implemented by Daniel J. Bernstein in python. In addition to simple transcription, the project also analyzes the computational complexities of the algorithm, providing a basis for optimizations and benchmarking.
+Both sequential and parallel versions of the algorithm were implemented to demonstrate scalability and adaptability in multicore and vectorized environments.
 
 
 ## How to run
