@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <getopt.h>
+
 #include "insertion_series/insertionSeries.h"
 
 
@@ -58,6 +61,7 @@ void read_pairs(PairList *pairList){
     }
 }
 
+
 /**
  * Function that print the intList.
  *
@@ -78,9 +82,53 @@ void print_intlist(const IntList *intList){
 }
 
 
-//int argc,char **argv
-int main() {
-    printf("Insertion Series of DJB\n\n");
+/**
+ * Function that displays a help message that describes how to use the program, including the available short and long command-line options.
+ *
+ * @param progName the program name.
+ */
+void print_help(const char *progName) {
+    printf("Usage: %s [options]\n", progName);
+    printf("Options:\n");
+    printf("  -p, --parallel     Run in parallel mode\n");
+    printf("  -s, --serial       Run in serial mode (default)\n");
+    printf("  -h, --help         Show this help message\n");
+}
+
+
+int main(int argc, char **argv) {
+    /// Selects the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
+    short serialOrParallel = 0;
+    /// Defines the possible long options.
+    static struct option longOptions[] = {
+        {"parallel", no_argument,       0, 'p'},
+        {"serial",   no_argument,       0, 's'},
+        {"help",     no_argument,       0, 'h'},
+        {0, 0, 0, 0}
+    };
+    /// Gets the return value of the getopt function, i.e. the chosen option.
+    int opt;
+    /// Index in the longOptions array indicating which long option has been selected.
+    int option_index = 0;
+    
+    while ((opt = getopt_long(argc, argv, "psh", longOptions, &option_index)) != -1) {
+        switch (opt) {
+            case 'p':
+                serialOrParallel = 1;
+            break;
+            case 's':
+                serialOrParallel = 0;
+            break;
+            case 'h':
+                print_help(argv[0]);
+            return 0;
+            default:
+                print_help(argv[0]);
+            return 1;
+        }
+    }
+
+    printf("Insertion Series of DJB - %s\n\n", serialOrParallel ? "parallel version" : "serial version");
 
     /// The intList to fill.
     IntList intList;
@@ -100,13 +148,13 @@ int main() {
     read_pairs(&pairList);
 
     /// The result.
-    IntList result = insertionseries(&intList, &pairList);
+    IntList result = insertionseries(&intList, &pairList, serialOrParallel);
 
     printf("\nThe list after all the insertion\n");
     print_intlist(&result);
 
     /// The pairList sorted.
-    PairList pairListSort = insertionseries_sort_recursive(&pairList);
+    PairList pairListSort = insertionseries_sort_recursive(&pairList, serialOrParallel);
 
     puts("\nFinal positions:");
     for(size_t i=0; i < pairListSort.listSize; ++i) {
@@ -114,10 +162,9 @@ int main() {
     }
 
     intlist_free(&result);
-    pairlist_free(&pairListSort);
-
     intlist_free(&intList);
     pairlist_free(&pairList);
+    pairlist_free(&pairListSort);
 
     return 0;
 }
