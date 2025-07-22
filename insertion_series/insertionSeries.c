@@ -67,9 +67,28 @@ size_t binarySearch(Quadruple *list, size_t start, size_t end, Quadruple key) {
  * @note The first element is always 0.
  *
  * @param list the intList.
+ * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the new list that has size input list + 1, where all element is the sum of all previous elements of the input list.
  */
-IntList prefixSum(const IntList *list) {
+IntList prefixSum(const IntList *list, short parallel) {
+    if (parallel) {
+        return prefixSumParallel(list);
+    }
+    else {
+        return prefixSumSerial(list);
+    }
+}
+
+/**
+ * Function that computes the cumulative prefixes of an intList.
+ *
+ * @details Serial version.
+ * @note The first element is always 0.
+ *
+ * @param list the intList.
+ * @return the new list that has size input list + 1, where all element is the sum of all previous elements of the input list.
+ */
+IntList prefixSumSerial(const IntList *list) {
     /// The result.
     IntList result;
     intlist_init(&result);
@@ -90,8 +109,8 @@ IntList prefixSum(const IntList *list) {
 /**
  * Function that computes the cumulative prefixes of an intList.
  *
+ * @details Parallel version.
  * @note The first element is always 0.
- * @note Parallel version.
  *
  * @param list the intList.
  * @return the new list that has size input list + 1, where all element is the sum of all previous elements of the input list.
@@ -174,9 +193,30 @@ IntList prefixSumParallel(const IntList *list) {
  * @param firstListSize the size of the first list of quadruple.
  * @param secondList the second list of quadruple.
  * @param secondListSize the size of the second list of quadruple.
+ * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the ordered union of the two input lists.
  */
-Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
+Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize, short parallel) {
+    if (parallel) {
+        return mergeParallel(firstList, firstListSize, secondList, secondListSize);
+    }
+    else {
+        return mergeSerial(firstList, firstListSize, secondList, secondListSize);
+    }
+}
+
+/**
+ * Function that merge and sort two list of quadruple.
+ *
+ * @details Serial version.
+ *
+ * @param firstList the first list of quadruple.
+ * @param firstListSize the size of the first list of quadruple.
+ * @param secondList the second list of quadruple.
+ * @param secondListSize the size of the second list of quadruple.
+ * @return the ordered union of the two input lists.
+ */
+Quadruple *mergeSerial(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
     /// The size of the new list of quadruple.
     size_t resultSize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
@@ -193,8 +233,7 @@ Quadruple *merge(Quadruple *firstList, size_t firstListSize, Quadruple *secondLi
 /**
  * Merge two sorted arrays of Quadruple into a single sorted array.
  *
- * @note The two list must be already be sorted.
- * @note Parallel version.
+ * @details Parallel version.
  *
  * @param firstList the first list of quadruple.
  * @param firstListSize the size of the first list of quadruple.
@@ -231,9 +270,10 @@ Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *
  *
  * @param firstList the first pairList.
  * @param secondList the second pairList.
+ * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the ordered merged pairList.
  */
-PairList insertionseries_sort_merge(const PairList *firstList, const PairList *secondList) {
+PairList insertionseries_sort_merge(const PairList *firstList, const PairList *secondList, short parallel) {
     /// List size of firstList.
     size_t firstListSize = firstList->listSize;
     /// List size of secondList.
@@ -261,8 +301,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// The size of the new list of quadruple.
     size_t newQuadrupleArraySize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *newQuadrupleArray = mergeParallel(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize);
-//    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize);
+    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize, parallel);
 
     // let us compute the correct offsetList to add to newQuadrupleArray.index0
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
@@ -275,8 +314,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     }
 
     /// The list of true offset to add at each element of newQuadrupleArray.index0.
-    IntList offsetList = prefixSumParallel(&fromLeftInverse);
-//    IntList offsetList = prefixSum(&fromLeftInverse);
+    IntList offsetList = prefixSum(&fromLeftInverse, parallel);
 
     /// The output pairList.
     PairList result;
@@ -303,9 +341,10 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
  * @note The function work recursively.
  *
  * @param pairList the pairList to sort.
+ * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the pairList sorted.
  */
-PairList insertionseries_sort_recursive(const PairList *pairList) {
+PairList insertionseries_sort_recursive(const PairList *pairList, short parallel) {
     // base case
     if(pairList->listSize <= 1){
         /// The sorted pairList.
@@ -337,10 +376,10 @@ PairList insertionseries_sort_recursive(const PairList *pairList) {
         pairlist_append(&right, pairList->list[i].index0, pairList->list[i].index1);
     }
 
-    left = insertionseries_sort_recursive(&left);
-    right = insertionseries_sort_recursive(&right);
+    left = insertionseries_sort_recursive(&left, parallel);
+    right = insertionseries_sort_recursive(&right, parallel);
     /// The sorted pairList.
-    PairList result = insertionseries_sort_merge(&left, &right);
+    PairList result = insertionseries_sort_merge(&left, &right, parallel);
 
     pairlist_free(&left);
     pairlist_free(&right);
@@ -353,9 +392,10 @@ PairList insertionseries_sort_recursive(const PairList *pairList) {
  *
  * @param list the intList where to insert the new values.
  * @param pairList the pairList that contains the positions and the values to insert in the intList.
+ * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the new intList with the value inserted.
  */
-IntList insertionseries_merge_after_sort_recursive(const IntList *list, const PairList *pairList) {
+IntList insertionseries_merge_after_sort_recursive(const IntList *list, const PairList *pairList, short parallel) {
     /// The pairList that contains all the value in the list, <actual_position, element>.
     PairList listPair;
     pairlist_init(&listPair);
@@ -365,9 +405,9 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
     }
 
     /// The pairList sorted.
-    PairList pairListSorted = insertionseries_sort_recursive(pairList);
+    PairList pairListSorted = insertionseries_sort_recursive(pairList, parallel);
     /// The new sorted pairList that contains listPair and pairList.
-    PairList fusionSort = insertionseries_sort_merge(&listPair, &pairListSorted);
+    PairList fusionSort = insertionseries_sort_merge(&listPair, &pairListSorted, parallel);
 
     /// The new intList with the value inserted.
     IntList result;
@@ -384,6 +424,3 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
 
     return result;
 }
-
-
-#define insertionseries insertionseries_merge_after_sort_recursive
