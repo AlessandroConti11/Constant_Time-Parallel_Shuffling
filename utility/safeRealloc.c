@@ -11,12 +11,12 @@
  * @return the pointer to the new memory block.
  */
 void *safeRealloc(void *pointerToRealloc, size_t reallocSize) {
-    /// New pointer.
+    /// The new pointer.
     void *newPointer = realloc(pointerToRealloc, reallocSize ? reallocSize : 1);
 
 
     if (!newPointer) {
-        perror("realloc");
+        perror("Realloc Error");
         exit(EXIT_FAILURE);
     }
 

@@ -1,5 +1,4 @@
 #include "pairList.h"
-#include "intList.h"
 
 
 /**
@@ -87,7 +86,7 @@ void pairlist_copy(PairList *listDestination, const PairList *listSource) {
 }
 
 /**
- * Function that frees the memory allocated for the intList and resets the structure to its initial state.
+ * Function that frees the memory allocated for the pairList and resets the structure to its initial state.
  *
  * @param list the pairList.
  */

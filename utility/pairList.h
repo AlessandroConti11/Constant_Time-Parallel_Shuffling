@@ -2,19 +2,21 @@
 #define DJB_PAIRLIST_H
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stddef.h>
 #include <assert.h>
-#include <time.h>
+#include <string.h>
 
 #include "tuple.h"
 #include "safeRealloc.h"
 
 
+/// The new type representing a list of pair.
 typedef struct {
+    /// The list.
     Pair *list;
+    /// The current size of the list.
     size_t listSize;
+    /// The maximum capacity of the list.
     size_t listCapacity;
 } PairList;
 
