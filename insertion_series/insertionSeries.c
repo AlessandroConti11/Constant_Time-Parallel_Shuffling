@@ -284,18 +284,42 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// Array of quadruple, each quadruple value corresponds to the secondList values.
     Quadruple *secondListQuadrupleArray = malloc(secondListSize * sizeof * secondListQuadrupleArray);
 
-    for(size_t j = 0; j < firstListSize; ++j){
-        firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
-        firstListQuadrupleArray[j].fromLeft = 1;
-        firstListQuadrupleArray[j].indexInItsList = 0;
-        firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
+    if (parallel) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static) nowait
+            for(size_t j = 0; j < firstListSize; ++j){
+                firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
+                firstListQuadrupleArray[j].fromLeft = 1;
+                firstListQuadrupleArray[j].indexInItsList = 0;
+                firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
+            }
+
+#pragma omp for schedule(static)
+            // to the second list we want to give it more importance (they are the tuples not yet entered)
+            for(size_t j = 0; j < secondListSize; ++j){
+                secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
+                secondListQuadrupleArray[j].fromLeft = 0;
+                secondListQuadrupleArray[j].indexInItsList = (int)j;
+                secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
+            }
+        }
     }
-    // to the second list we want to give it more importance (they are the tuples not yet entered)
-    for(size_t j = 0; j < secondListSize; ++j){
-        secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
-        secondListQuadrupleArray[j].fromLeft = 0;
-        secondListQuadrupleArray[j].indexInItsList = (int)j;
-        secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
+    else {
+        for(size_t j = 0; j < firstListSize; ++j){
+            firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
+            firstListQuadrupleArray[j].fromLeft = 1;
+            firstListQuadrupleArray[j].indexInItsList = 0;
+            firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
+        }
+
+        // to the second list we want to give it more importance (they are the tuples not yet entered)
+        for(size_t j = 0; j < secondListSize; ++j){
+            secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
+            secondListQuadrupleArray[j].fromLeft = 0;
+            secondListQuadrupleArray[j].indexInItsList = (int)j;
+            secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
+        }
     }
 
     /// The size of the new list of quadruple.
