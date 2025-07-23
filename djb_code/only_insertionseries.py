@@ -331,7 +331,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--test',
         action='store_true',
-        help="Runs tests instead of the interactive main"
+        help="Runs tests instead of the interactive main."
     )
     args = parser.parse_args()
 
