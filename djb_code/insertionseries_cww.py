@@ -430,13 +430,21 @@ def cww_test():
                     assert results[result] == tfactorial
 
 
-def main_cww():
-    ########################
-    # ===== Main interattivo
-    ########################
 
+# ===== Interactive Main
+
+
+def main_cww():
     def ask_int(prompt, min_value=None, max_value=None):
-        """Chiede un intero, eventualmente con vincoli di minimo/massimo."""
+        """
+        Function that reads integer.
+
+        :param prompt: the message displayed to the user when requesting input
+        :param min_value: the minimum value required.
+        :param max_value: the maximum value required.
+        :return: an integer.
+        """
+
         while True:
             try:
                 v = int(input(prompt))
@@ -447,61 +455,54 @@ def main_cww():
             except ValueError:
                 rng = []
                 if min_value is not None:
-                    rng.append(f"≥ {min_value}")
+                    rng.append(f">={min_value}")
                 if max_value is not None:
-                    rng.append(f"≤ {max_value}")
-                print(f"Valore non valido. Inserisci un intero {' e '.join(rng)}.")
+                    rng.append(f"<={max_value}")
+                print(f"Not valid. Insert an integer {' e '.join(rng)}.")
 
-########################################################################################################################
 
-    print("=== Generatore di constant‑weight words ===")
-    print("L’algoritmo usa la funzione cww(m, X) definita sopra.")
-    print()
+    print("Constant-Weight Word Creation of DJB")
+    m = ask_int("Insert the number of 0s: ", min_value=0)
 
-    # chiedo m
-    m = ask_int("Numero di zeri iniziali (m ≥ 0): ", min_value=0)
+    t = ask_int("Insert the number of 1s (t ≥ 0): ", min_value=0)
 
-    # chiedo t (numero di 1 da inserire) e quindi la lista X
-    t = ask_int("Numero di 1 da inserire (t ≥ 0): ", min_value=0)
-
+    print("Insert the position of the ith 1")
     X = []
     for i in range(t):
-        upper = m + i                       # vincolo: 0 ≤ X[i] ≤ m+i
-        prompt = f"Posizione X[{i}] (0..{upper}): "
+        upper = m + i
+        prompt = f"Position X[{i}] (0..{upper}): "
         X.append(ask_int(prompt, min_value=0, max_value=upper))
 
-    # calcolo la parola
     word = cww(m, X)
 
-    print("\nRisultato:")
-    print("Word:", word)
-    print("Posizioni dei bit 1:", [idx for idx, bit in enumerate(word) if bit])
+    print(f"\nConstant-Weight Word Created:\n{word}")
+    print("Final 1s position:", [idx for idx, bit in enumerate(word) if bit])
 
 def main_insertionseries():
-    # ===== Main interattivo =========================================
-    #
-    # Come si usa:
-    #   $ python3 insertionseries.py
-    #
-    # 1. Inserisci gli elementi di L separati da spazi (es. "10 20 30").
-    # 2. Inserisci le coppie X Y una per riga (es. "0 99"), premi Invio a
-    #    riga vuota per terminare.
-    # 3. Il programma stampa:
-    #      • la lista risultante dopo tutte le inserzioni
-    #      • la lista (x',y) restituita da insertionseries_sort (facoltativo)
-
     def _read_int_list(prompt):
-        """Ritorna una lista di interi letti da input()."""
+        """
+        Function that returns a list of integers entered by the user.
+
+        :param prompt: the message displayed to the user when requesting input.
+        :return: a list of integer.
+        """
+
         line = input(prompt).strip()
         if not line:
             return []
         return [int(tok) for tok in line.split()]
 
     def _read_pairs():
-        """Legge righe 'x y' finché l’utente dà Invio a riga vuota."""
+        """
+        Function that reads the pair position, value to insert.
+
+        :return: the list of pair.
+        """
+
         pairs = []
-        print("Inserisci le coppie X Y (posizione valore), una per riga; "
-              "Invio su riga vuota per finire.")
+        print("Insert the pair <position, value>, one per row;\n"
+              "Click enter on an empty row to stop the procedure.\n")
+
         while True:
             line = input("> ").strip()
             if line == "":
@@ -510,47 +511,48 @@ def main_insertionseries():
                 x_str, y_str = line.split()
                 pairs.append((int(x_str), int(y_str)))
             except ValueError:
-                print("⚠️  Formato non valido: devi scrivere due interi separati da spazi.")
+                print("Not a valid format")
         return pairs
 
-########################################################################################################################
 
-    print("=== Inserimento serie di inserzioni ===")
-    L = _read_int_list("Lista iniziale L (numeri separati da spazi): ")
+    print("Insertion Series of DJB")
+    L = _read_int_list("Insert the list (number space separated):\n")
+
+    print(f"\nThe list after all the insertion\n{L}")
+
     XY = _read_pairs()
 
     try:
         result = insertionseries(L, XY)
     except AssertionError:
-        print("\n❌  Errore: qualche coppia X è fuori intervallo.")
+        print("\nSome pair is outside the range.")
         return
 
-    print("\nRisultato dopo le inserzioni:")
+
+    print("\nThe list after all the insertion:")
     print(result)
 
-    # Facoltativo: mostra anche le posizioni finali calcolate da insertionseries_sort
     S = insertionseries_sort(XY)
-    print("\nPosizioni finali (x', y) calcolate da insertionseries_sort:")
+    print("\nFinal positions:")
     for x, y in S:
-        print(f"pos {x}: {y}")
-
+        print(f"position {x}: {y}")
 
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Esegue la serie di inserzioni oppure i test interni."
+        description="Execute iterative mains or internal tests."
     )
     parser.add_argument(
         '--test',
         action='store_true',
-        help="Esegue insertionseries_test() e cww_test invece del main interattivo"
+        help="Runs tests instead of the interactive main."
     )
     parser.add_argument(
         '--cww',
         action='store_true',
-        help="Esegue cww iterativo"
+        help="Executes the constant-weight word creation"
     )
     args = parser.parse_args()
 
