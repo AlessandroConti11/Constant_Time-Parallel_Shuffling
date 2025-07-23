@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <assert.h>
 #include <getopt.h>
 
 #include "insertion_series/insertionSeries.h"
@@ -91,44 +93,20 @@ void print_intlist(const IntList *intList){
 void print_help(const char *progName) {
     printf("Usage: %s [options]\n", progName);
     printf("Options:\n");
-    printf("  -p, --parallel     Run in parallel mode\n");
-    printf("  -s, --serial       Run in serial mode (default)\n");
-    printf("  -h, --help         Show this help message\n");
+    printf("      --insertionseries   Execute the insertionSeries function\n");
+    printf("      --cww               Execute the constant-weight word creation function\n");
+    printf("  -p, --parallel          Run in parallel mode\n");
+    printf("  -s, --serial            Run in serial mode (default)\n");
+    printf("  -h, --help              Show this help message\n");
 }
 
 
-int main(int argc, char **argv) {
-    /// Selects the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
-    short serialOrParallel = 0;
-    /// Defines the possible long options.
-    static struct option longOptions[] = {
-        {"parallel", no_argument,       0, 'p'},
-        {"serial",   no_argument,       0, 's'},
-        {"help",     no_argument,       0, 'h'},
-        {0, 0, 0, 0}
-    };
-    /// Gets the return value of the getopt function, i.e. the chosen option.
-    int opt;
-    /// Index in the longOptions array indicating which long option has been selected.
-    int option_index = 0;
-    
-    while ((opt = getopt_long(argc, argv, "psh", longOptions, &option_index)) != -1) {
-        switch (opt) {
-            case 'p':
-                serialOrParallel = 1;
-            break;
-            case 's':
-                serialOrParallel = 0;
-            break;
-            case 'h':
-                print_help(argv[0]);
-            return 0;
-            default:
-                print_help(argv[0]);
-            return 1;
-        }
-    }
-
+/**
+ * Function that shows the Daniel J. Bernstein's insertion series algorithm.
+ *
+ * @param serialOrParallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
+ */
+void mainInsertionSeries(short serialOrParallel) {
     printf("Insertion Series of DJB - %s\n\n", serialOrParallel ? "parallel version" : "serial version");
 
     /// The intList to fill.
@@ -148,15 +126,11 @@ int main(int argc, char **argv) {
 
     read_pairs(&pairList);
 
-    // IntList list = cww_via_insertionseries(4, &pairList, 0);
-    // printf("cww: ");
-    // print_intlist(&list);
-
-    /// The result.
-    IntList result = insertionseries(&intList, &pairList, serialOrParallel);
+    /// The list with the required elements inserted in the required positions.
+    IntList listWithNewElement = insertionseries(&intList, &pairList, serialOrParallel);
 
     printf("\nThe list after all the insertion\n");
-    print_intlist(&result);
+    print_intlist(&listWithNewElement);
 
     /// The pairList sorted.
     PairList pairListSort = insertionseries_sort_recursive(&pairList, serialOrParallel);
@@ -166,10 +140,99 @@ int main(int argc, char **argv) {
         printf("position %d: %d\n", pairListSort.list[i].index0, pairListSort.list[i].index1);
     }
 
-    intlist_free(&result);
+    intlist_free(&listWithNewElement);
     intlist_free(&intList);
     pairlist_free(&pairList);
     pairlist_free(&pairListSort);
+}
+
+/**
+ * Function that shows the Daniel J. Bernstein's constant-weight word creation algorithm.
+ *
+ * @param serialOrParallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
+ */
+void mainCww(short serialOrParallel) {
+    printf("Constant-Weight Word Construction of DJB - %s\n\n", serialOrParallel ? "parallel version" : "serial version");
+
+    /// The number of 0s in the constant-weight word.
+    int numberOfZero = 0;
+
+    printf("Insert the number of 0: ");
+    int returnScanf = scanf("%d", &numberOfZero);
+    assert(returnScanf > 0);
+
+    /// Integer used only to read the \n or EOF after the scanf
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
+    /// The intList of positions where the 1s will go.
+    IntList positionOfOne;
+    intlist_init(&positionOfOne);
+
+    printf("Insert the list of positions where to insert the 1s (number space separated):\n");
+    fflush(stdout);
+    read_intline(&positionOfOne);
+
+    /// The constant-weight word created.
+    IntList result = cww(numberOfZero, &positionOfOne, 0);
+
+    print_intlist(&result);
+
+    intlist_free(&positionOfOne);
+    intlist_free(&result);
+}
+
+int main(int argc, char **argv) {
+    /// Selects the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
+    short serialOrParallel = 0;
+    /// Selects the algorithm to be execute, either cww, 1, or insertionSeries, 0.
+    short algorithm = 0;
+
+    /// Defines the possible long options.
+    static struct option longOptions[] = {
+        {"insertionseries", no_argument, 0, 0},
+        {"cww", no_argument, 0, 0},
+        {"parallel", no_argument, 0, 'p'},
+        {"serial", no_argument, 0, 's'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
+    };
+    /// Gets the return value of the getopt function, i.e. the chosen option.
+    int opt;
+    /// Index in the longOptions array indicating which long option has been selected.
+    int option_index = 0;
+
+    while ((opt = getopt_long(argc, argv, "psh", longOptions, &option_index)) != -1) {
+        switch (opt) {
+            case 'p':
+                serialOrParallel = 1;
+                break;
+            case 's':
+                serialOrParallel = 0;
+                break;
+            case 'h':
+                print_help(argv[0]);
+                return 0;
+            case 0: // only long options
+                if (!strncmp(longOptions[option_index].name, "insertionseries", strlen("insertionseries"))) {
+                    algorithm = 0;
+                }
+                else if (!strncmp(longOptions[option_index].name, "cww", strlen("cww"))) {
+                    algorithm = 1;
+                }
+                break;
+            default:
+                print_help(argv[0]);
+                return 1;
+        }
+    }
+
+    if (algorithm) {
+        mainCww(serialOrParallel);
+    }
+    else {
+        mainInsertionSeries(serialOrParallel);
+    }
 
     return 0;
 }
