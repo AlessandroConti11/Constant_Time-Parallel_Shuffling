@@ -26,7 +26,7 @@ IntList cww_via_insertionseries(int wordSize, IntList *positionOfOne, short para
     pairlist_init(&pairList);
     pairlist_reserve(&pairList, positionOfOne->listSize);
 
-    for (int i = 0; i < positionOfOne->listSize; ++i) {
+    for (size_t i = 0; i < positionOfOne->listSize; ++i) {
         pairlist_append(&pairList, positionOfOne->list[i], 1);
     }
 
