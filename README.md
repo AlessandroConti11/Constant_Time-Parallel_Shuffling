@@ -46,6 +46,7 @@ The steps below refer to a Unix environment, for other environments the commands
     utility/pairList.o \
     utility/safeRealloc.o \
     insertion_series/insertionSeries.o \
+    constant-weight_words/constantWeightWord.o
     -o EXECUTABLE
     ```
 3. run the executable

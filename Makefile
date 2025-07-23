@@ -7,7 +7,8 @@ CFLAGS = -std=c11 -Wall -Werror -Wextra -O2 -fopenmp
 
 # Source directories
 SRC_DIRS = utility \
-			insertion_series
+			insertion_series \
+			constant-weight_words
 
 # Source files
 SRC = main.c \

@@ -12,6 +12,8 @@ add_executable(djb
         utility/pairList.c
         utility/pairList.h
         utility/safeRealloc.c
+        constant-weight_words/constantWeightWord.c
+        constant-weight_words/constantWeightWord.h
 )
 
 find_package(OpenMP REQUIRED)
