@@ -131,18 +131,40 @@ IntList cww_sort_mergepos(const IntList *firstList, const IntList *secondList, s
     /// Array of quadruple, each quadruple value corresponds to the secondList values.
     Quadruple *secondListQuadrupleArray = malloc(secondListSize * sizeof(Quadruple));
 
-    for (size_t i = 0; i < firstListSize; ++i) {
-        firstListQuadrupleArray[i].index0 = firstList->list[i];
-        firstListQuadrupleArray[i].fromLeft = 1;
-        firstListQuadrupleArray[i].indexInItsList = i;
-        firstListQuadrupleArray[i].index1 = 1;
-    }
+    if (parallel) {
+#pragma omp parallel
+        {
+#pragma omp for schedule(static) nowait
+            for (size_t i = 0; i < firstListSize; ++i) {
+                firstListQuadrupleArray[i].index0 = firstList->list[i];
+                firstListQuadrupleArray[i].fromLeft = 1;
+                firstListQuadrupleArray[i].indexInItsList = i;
+                firstListQuadrupleArray[i].index1 = 1;
+            }
 
-    for (size_t j = 0; j < secondListSize; ++j) {
-        secondListQuadrupleArray[j].index0 = secondList->list[j] - (int)j;
-        secondListQuadrupleArray[j].fromLeft = 0;
-        secondListQuadrupleArray[j].indexInItsList = j;
-        secondListQuadrupleArray[j].index1 = 1;
+#pragma omp for schedule(static) nowait
+            for (size_t j = 0; j < secondListSize; ++j) {
+                secondListQuadrupleArray[j].index0 = secondList->list[j] - (int)j;
+                secondListQuadrupleArray[j].fromLeft = 0;
+                secondListQuadrupleArray[j].indexInItsList = j;
+                secondListQuadrupleArray[j].index1 = 1;
+            }
+        }
+    }
+    else {
+        for (size_t i = 0; i < firstListSize; ++i) {
+            firstListQuadrupleArray[i].index0 = firstList->list[i];
+            firstListQuadrupleArray[i].fromLeft = 1;
+            firstListQuadrupleArray[i].indexInItsList = i;
+            firstListQuadrupleArray[i].index1 = 1;
+        }
+
+        for (size_t j = 0; j < secondListSize; ++j) {
+            secondListQuadrupleArray[j].index0 = secondList->list[j] - (int)j;
+            secondListQuadrupleArray[j].fromLeft = 0;
+            secondListQuadrupleArray[j].indexInItsList = j;
+            secondListQuadrupleArray[j].index1 = 1;
+        }
     }
 
     /// The size of the new list of quadruple.
