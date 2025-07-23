@@ -3,6 +3,7 @@
 
 
 #include <omp.h>
+#include <stddef.h>
 
 #include "../utility/tuple.h"
 #include "../utility/intList.h"
