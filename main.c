@@ -157,7 +157,7 @@ void mainCww(short serialOrParallel) {
     /// The number of 0s in the constant-weight word.
     int numberOfZero = 0;
 
-    printf("Insert the number of 0: ");
+    printf("Insert the number of 0s: ");
     int returnScanf = scanf("%d", &numberOfZero);
     assert(returnScanf > 0);
 
