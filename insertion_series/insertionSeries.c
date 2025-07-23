@@ -4,7 +4,7 @@
 /**
  * Function that compares two quadruple.
  *
- * @note The comparison compare the following quadruple's value:
+ * @note The comparison compares the following quadruple's value:
  * 1. index0;
  * 2. fromLeft;
  * 3. indexInItsList.
@@ -362,7 +362,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
 /**
  * Function that sorts a pairList.
  *
- * @note The function work recursively.
+ * @note The function works recursively.
  *
  * @param pairList the pairList to sort.
  * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
@@ -405,7 +405,7 @@ PairList insertionseries_sort_recursive(const PairList *pairList, short parallel
     /// The sorted right part of the input pairList
     PairList sortedRight = insertionseries_sort_recursive(&right, parallel);
 
-    /// The sorted pairList.
+    /// The initial sorted pairList.
     PairList result = insertionseries_sort_merge(&sortedLeft, &sortedRight, parallel);
 
     pairlist_free(&left);
@@ -425,7 +425,7 @@ PairList insertionseries_sort_recursive(const PairList *pairList, short parallel
  * @return the new intList with the value inserted.
  */
 IntList insertionseries_merge_after_sort_recursive(const IntList *list, const PairList *pairList, short parallel) {
-    /// The pairList that contains all the value in the list, <actual_position, element>.
+    /// The pairList that contains all the value in the list - <actual_position, element>.
     PairList listPair;
     pairlist_init(&listPair);
 
@@ -433,23 +433,23 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
         pairlist_append(&listPair, (int) i, list->list[i]);
     }
 
-    /// The pairList sorted.
+    /// The pairList of positions where to insert an ordered element.
     PairList pairListSorted = insertionseries_sort_recursive(pairList, parallel);
-    /// The new sorted pairList that contains listPair and pairList.
-    PairList fusionSort = insertionseries_sort_merge(&listPair, &pairListSorted, parallel);
+    /// The new sorted pairList containing the original list and the inserted elements.
+    PairList finalPairList = insertionseries_sort_merge(&listPair, &pairListSorted, parallel);
 
     /// The new intList with the value inserted.
     IntList result;
     intlist_init(&result);
-    intlist_reserve(&result, fusionSort.listSize);
+    intlist_reserve(&result, finalPairList.listSize);
 
-    for(size_t i = 0; i < fusionSort.listSize; ++i) {
-        intlist_append(&result, fusionSort.list[i].index1);
+    for(size_t i = 0; i < finalPairList.listSize; ++i) {
+        intlist_append(&result, finalPairList.list[i].index1);
     }
 
     pairlist_free(&listPair);
     pairlist_free(&pairListSorted);
-    pairlist_free(&fusionSort);
+    pairlist_free(&finalPairList);
 
     return result;
 }
