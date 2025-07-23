@@ -6,18 +6,18 @@
  *
  * @details this function uses only the insertionSeries procedure.
  *
- * @param wordSize the size of the word.
+ * @param numberOfZero the number of 0s in the constant-weight word.
  * @param positionOfOne the positions in which to insert the ones.
  * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the constant-weight word.
  */
-IntList cww_via_insertionseries(int wordSize, IntList *positionOfOne, short parallel) {
+IntList cww_via_insertionseries(int numberOfZero, IntList *positionOfOne, short parallel) {
     /// The constant-weight word to be created.
     IntList list;
     intlist_init(&list);
-    intlist_reserve(&list, wordSize);
+    intlist_reserve(&list, numberOfZero);
 
-    for (int i = 0; i < wordSize; ++i) {
+    for (int i = 0; i < numberOfZero; ++i) {
         intlist_append(&list, 0);
     }
 
@@ -42,21 +42,21 @@ IntList cww_via_insertionseries(int wordSize, IntList *positionOfOne, short para
  * @return the constant-weight word with the 1s in correct position.
  */
 IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positionOfOne, short parallel) {
-    /// List size of firstList.
-    size_t firstListSize = positionOfZero->listSize;
-    /// List size of secondList.
-    size_t secondListSize = positionOfOne->listSize;
+    /// List size of positionOfZero.
+    size_t positionOfZeroSize = positionOfZero->listSize;
+    /// List size of positionOfOne.
+    size_t positionofOneSize = positionOfOne->listSize;
 
     /// Array of quadruple, each quadruple value corresponds to the firstList values.
-    Quadruple *firstListQuadrupleArray = malloc(firstListSize * sizeof(Quadruple));
+    Quadruple *firstListQuadrupleArray = malloc(positionOfZeroSize * sizeof(Quadruple));
     /// Array of quadruple, each quadruple value corresponds to the firstList values.
-    Quadruple *secondListQuadrupleArray = malloc(secondListSize * sizeof(Quadruple));
+    Quadruple *secondListQuadrupleArray = malloc(positionofOneSize * sizeof(Quadruple));
 
     if (parallel) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static) nowait
-            for (size_t i = 0; i < firstListSize; ++i) {
+            for (size_t i = 0; i < positionOfZeroSize; ++i) {
                 firstListQuadrupleArray[i].index0 = positionOfZero->list[i];
                 firstListQuadrupleArray[i].fromLeft = 1;
                 firstListQuadrupleArray[i].indexInItsList = i;
@@ -65,7 +65,7 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
 
 #pragma omp for schedule(static) nowait
             // to the second list we want to give it more importance (they are the tuples not yet entered)
-            for (size_t j = 0; j < secondListSize; ++j) {
+            for (size_t j = 0; j < positionofOneSize; ++j) {
                 secondListQuadrupleArray[j].index0 = positionOfOne->list[j] - (int)j;
                 secondListQuadrupleArray[j].fromLeft = 0;
                 secondListQuadrupleArray[j].indexInItsList = j;
@@ -74,7 +74,7 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
         }
     }
     else {
-        for (size_t i = 0; i < firstListSize; ++i) {
+        for (size_t i = 0; i < positionOfZeroSize; ++i) {
             firstListQuadrupleArray[i].index0 = positionOfZero->list[i];
             firstListQuadrupleArray[i].fromLeft = 1;
             firstListQuadrupleArray[i].indexInItsList = i;
@@ -82,7 +82,7 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
         }
 
         // to the second list we want to give it more importance (they are the tuples not yet entered)
-        for (size_t j = 0; j < secondListSize; ++j) {
+        for (size_t j = 0; j < positionofOneSize; ++j) {
             secondListQuadrupleArray[j].index0 = positionOfOne->list[j] - (int)j;
             secondListQuadrupleArray[j].fromLeft = 0;
             secondListQuadrupleArray[j].indexInItsList = j;
@@ -91,9 +91,9 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
     }
 
     /// The size of the new list of quadruple.
-    size_t newQuadrupleArraySize = firstListSize + secondListSize;
+    size_t newQuadrupleArraySize = positionOfZeroSize + positionofOneSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize, parallel);
+    Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, positionOfZeroSize, secondListQuadrupleArray, positionofOneSize, parallel);
 
     /// The output intList
     IntList result;
@@ -248,18 +248,18 @@ IntList cww_sort_recursive(const IntList *intList, short parallel) {
  *
  * @note The word is created as a list of integers.
  *
- * @param wordSize the number of 0s in the constant-weight word.
+ * @param numberOfZero the number of 0s in the constant-weight word.
  * @param positionOfOne the list of positions where the 1s will go.
  * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the constant-weight word composed of the number of 0s and the position of 1s required.
  */
-IntList cww_merge_after_sort_recursive(int wordSize, IntList *positionOfOne, short parallel) {
+IntList cww_merge_after_sort_recursive(int numberOfZero, IntList *positionOfOne, short parallel) {
     /// List containing the indexes of 0s (the word currently only has 0s).
     IntList positionOfZero;
     intlist_init(&positionOfZero);
-    intlist_reserve(&positionOfZero, wordSize);
+    intlist_reserve(&positionOfZero, numberOfZero);
 
-    for (int i = 0; i < wordSize; ++i) {
+    for (int i = 0; i < numberOfZero; ++i) {
         intlist_append(&positionOfZero, i);
     }
 
