@@ -146,51 +146,12 @@ def prefixsums(L):
 # helpers:
 #   insertionseries_sort_merge
 
-def insertionseries_ref(L, XY):
-    L = list(L)
-    for x, y in XY:
-        assert 0 <= x and x <= len(L)
-        L = L[:x] + [y] + L[x:]
-    return L
-
-
-def insertionseries_reduce_to_case_of_empty_list(L, XY):
-    XY = list(enumerate(L)) + list(XY)
-    return insertionseries_ref([], XY)
-
-
-def insertionseries_sort_ref(XY):
-    L = []
-    for x, y in XY:
-        L = ([(u, v) for u, v in L if u < x]
-             + [(x, y)]
-             + [(u + 1, v) for u, v in L if x <= u]
-             )
-    return L
-
-
-def insertionseries_linearscan_after_sort_ref(L, XY):
-    L = list(L)
-    R = insertionseries_sort_ref(XY)
-    result = []
-    for x, y in R:
-        segment, L = L[:x - len(result)], L[x - len(result):]
-        result += segment + [y]
-    return result + L
-
-
 def insertionseries_sort_merge(L, R):
     L = [(x, 1, 0, y) for j, (x, y) in enumerate(L)]
     R = [(x - j, 0, j, y) for j, (x, y) in enumerate(R)]
     M = merge(L, R)
     offsets = prefixsums(1 - fromL for _, fromL, _, _ in M)
     return [(x + offset, y) for (x, _, _, y), offset in zip(M, offsets)]
-
-
-def insertionseries_merge_after_sort_ref(L, XY):
-    L = list(enumerate(L))
-    R = insertionseries_sort_ref(XY)
-    return [y for x, y in insertionseries_sort_merge(L, R)]
 
 
 def insertionseries_sort_recursive(XY):
@@ -386,12 +347,20 @@ def cww_test():
                     assert results[result] == tfactorial
 
 
-########################
-# ===== Main interattivo
-########################
+
+# ===== Interactive Main
+
 
 def ask_int(prompt, min_value=None, max_value=None):
-    """Chiede un intero, eventualmente con vincoli di minimo/massimo."""
+    """
+    Function that reads integer.
+
+    :param prompt: the message displayed to the user when requesting input
+    :param min_value: the minimum value required.
+    :param max_value: the maximum value required.
+    :return: an integer.
+    """
+
     while True:
         try:
             v = int(input(prompt))
@@ -402,47 +371,40 @@ def ask_int(prompt, min_value=None, max_value=None):
         except ValueError:
             rng = []
             if min_value is not None:
-                rng.append(f"≥ {min_value}")
+                rng.append(f">={min_value}")
             if max_value is not None:
-                rng.append(f"≤ {max_value}")
-            print(f"Valore non valido. Inserisci un intero {' e '.join(rng)}.")
+                rng.append(f"<={max_value}")
+            print(f"Not valid. Insert an integer {' e '.join(rng)}.")
 
 def main():
-    print("=== Generatore di constant‑weight words ===")
-    print("L’algoritmo usa la funzione cww(m, X) definita sopra.")
-    print()
+    print("Constant-Weight Word Creation of DJB")
+    m = ask_int("Insert the number of 0s: ", min_value=0)
 
-    # chiedo m
-    m = ask_int("Numero di zeri iniziali (m ≥ 0): ", min_value=0)
+    t = ask_int("Insert the number of 1s (t ≥ 0): ", min_value=0)
 
-    # chiedo t (numero di 1 da inserire) e quindi la lista X
-    t = ask_int("Numero di 1 da inserire (t ≥ 0): ", min_value=0)
-
+    print("Insert the position of the ith 1")
     X = []
     for i in range(t):
-        upper = m + i                       # vincolo: 0 ≤ X[i] ≤ m+i
-        prompt = f"Posizione X[{i}] (0..{upper}): "
+        upper = m + i
+        prompt = f"Position X[{i}] (0..{upper}): "
         X.append(ask_int(prompt, min_value=0, max_value=upper))
 
-    # calcolo la parola
     word = cww(m, X)
 
-    print("\nRisultato:")
-    print("Word:", word)
-    print("Posizioni dei bit 1:", [idx for idx, bit in enumerate(word) if bit])
+    print(f"\nConstant-Weight Word Created:\n{word}")
+    print("Final 1s position:", [idx for idx, bit in enumerate(word) if bit])
 
-import argparse
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Esegue la serie di inserzioni oppure i test interni."
+        description="Executes the constant-weight word creation or internal tests."
     )
     parser.add_argument(
         '--test',
         action='store_true',
-        help="Esegue insertionseries_test() invece del main interattivo"
+        help="Runs tests instead of the interactive main."
     )
     args = parser.parse_args()
 
