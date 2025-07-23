@@ -2,6 +2,7 @@
 #include <getopt.h>
 
 #include "insertion_series/insertionSeries.h"
+#include "constant-weight_words/constantWeightWord.h"
 
 
 /**
@@ -146,6 +147,10 @@ int main(int argc, char **argv) {
     pairlist_init(&pairList);
 
     read_pairs(&pairList);
+
+    IntList list = cww_via_insertionseries(4, &pairList, 0);
+    printf("cww: ");
+    print_intlist(&list);
 
     /// The result.
     IntList result = insertionseries(&intList, &pairList, serialOrParallel);
