@@ -148,9 +148,9 @@ int main(int argc, char **argv) {
 
     read_pairs(&pairList);
 
-    IntList list = cww_via_insertionseries(4, &pairList, 0);
-    printf("cww: ");
-    print_intlist(&list);
+    // IntList list = cww_via_insertionseries(4, &pairList, 0);
+    // printf("cww: ");
+    // print_intlist(&list);
 
     /// The result.
     IntList result = insertionseries(&intList, &pairList, serialOrParallel);
