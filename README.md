@@ -35,7 +35,6 @@ In addition to simple transcription, the project also analyses the computational
 ## How to run
 
 The steps below refer to a Unix environment, for other environments the commands may change.
-
 0. install gcc
     ```bash
     sudo apt-get install gcc 
@@ -79,7 +78,6 @@ The Makefile in the repository can also be used to compile the code.
 <br>
 
 The CMakeLists.txt in the repository can also be used to compile the code.
-
 0. install cmake
     ```bash
     sudo apt-get install cmake
@@ -100,6 +98,19 @@ The CMakeLists.txt in the repository can also be used to compile the code.
     ```bash
     ./djb
     ```
+
+<br>
+
+If you want to test the functioning of the algorithms, there is a main program suitable for testing the two algorithms.
+- To run the **insertionSeries** algorithm
+    ```bash
+    ./EXECUTABLE --insertionseries
+    ```
+- To run the **cww** algorithm
+    ```bash
+    ./EXECUTABLE --cww
+    ```
+It is also possible to decide whether to run the two algorithms in serial or in parallel mode by adding the *--serial* or *--parallel* options.
 
 ## Contribute
 
