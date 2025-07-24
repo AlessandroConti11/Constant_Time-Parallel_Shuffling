@@ -95,6 +95,7 @@ void print_help(const char *progName) {
     printf("Options:\n");
     printf("      --insertionseries   Execute the insertionSeries function\n");
     printf("      --cww               Execute the constant-weight word creation function\n");
+    printf("      --analysis          Run the temporal analysis\n");
     printf("  -p, --parallel          Run in parallel mode\n");
     printf("  -s, --serial            Run in serial mode (default)\n");
     printf("  -h, --help              Show this help message\n");
@@ -173,13 +174,19 @@ void mainCww(short serialOrParallel) {
     fflush(stdout);
     read_intline(&positionOfOne);
 
-    /// The constant-weight word created.
-    IntList result = cww(numberOfZero, &positionOfOne, 0);
+    /// The constant-weight word created using the cww function.
+    IntList result_cww = cww(numberOfZero, &positionOfOne, serialOrParallel);
+    /// The constant-weight word created using the cww_via_insertionseries function.
+    IntList result_cww_via_insertionseries = cww_via_insertionseries(numberOfZero, &positionOfOne, serialOrParallel);
 
-    print_intlist(&result);
+    printf("Creation of cww using the cww function:\n");
+    print_intlist(&result_cww);
+    printf("\nCreation of cww using the cww_via_insertionseries function:\n");
+    print_intlist(&result_cww_via_insertionseries);
 
     intlist_free(&positionOfOne);
-    intlist_free(&result);
+    intlist_free(&result_cww);
+    intlist_free(&result_cww_via_insertionseries);
 }
 
 int main(int argc, char **argv) {
