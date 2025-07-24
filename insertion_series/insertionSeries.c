@@ -243,7 +243,7 @@ Quadruple *mergeSerial(Quadruple *firstList, size_t firstListSize, Quadruple *se
  */
 Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *result = malloc(firstListSize + secondListSize * sizeof(Quadruple));
+    Quadruple *result = malloc((firstListSize + secondListSize) * sizeof(Quadruple));
     if (!result) {
         return NULL;
     }
