@@ -30,7 +30,13 @@ IntList cww_via_insertionseries(int numberOfZero, IntList *positionOfOne, short 
         pairlist_append(&pairList, positionOfOne->list[i], 1);
     }
 
-    return insertionseries(&list, &pairList, parallel);
+    /// The cww created.
+    IntList result = insertionseries(&list, &pairList, parallel);
+
+    intlist_free(&list);
+    pairlist_free(&pairList);
+
+    return result;
 }
 
 /**
@@ -288,5 +294,11 @@ IntList cww_merge_after_sort_recursive(int numberOfZero, IntList *positionOfOne,
     /// The ordered list of positions in which to insert the 1s.
     IntList sortedPositionOfOne = cww_sort_recursive(positionOfOne, parallel);
 
-    return cww_sort_mergebits(&positionOfZero, &sortedPositionOfOne, parallel);
+    /// The cww created:
+    IntList result = cww_sort_mergebits(&positionOfZero, &sortedPositionOfOne, parallel);
+
+    intlist_free(&positionOfZero);
+    intlist_free(&sortedPositionOfOne);
+
+    return result;
 }
