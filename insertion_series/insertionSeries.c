@@ -250,7 +250,7 @@ Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *
 
 #pragma omp parallel
     {
-#pragma omp for schedule(static) nowait
+#pragma omp for schedule(static)
         for (size_t i = 0; i < firstListSize; i++) {
             result[i + binarySearch(secondList, 0, secondListSize, firstList[i])] = firstList[i];
         }
