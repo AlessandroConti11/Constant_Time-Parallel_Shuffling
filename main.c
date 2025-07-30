@@ -95,7 +95,6 @@ void print_help(const char *progName) {
     printf("Options:\n");
     printf("      --insertionseries   Execute the insertionSeries function\n");
     printf("      --cww               Execute the constant-weight word creation function\n");
-    printf("      --analysis          Run the temporal analysis\n");
     printf("  -p, --parallel          Run in parallel mode\n");
     printf("  -s, --serial            Run in serial mode (default)\n");
     printf("  -h, --help              Show this help message\n");
