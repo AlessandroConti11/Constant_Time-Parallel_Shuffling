@@ -64,35 +64,35 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
 #pragma omp for schedule(static) nowait
             for (size_t i = 0; i < positionOfZeroSize; ++i) {
                 firstListQuadrupleArray[i].index0 = positionOfZero->list[i];
+                firstListQuadrupleArray[i].index1 = 1;
                 firstListQuadrupleArray[i].fromLeft = 1;
                 firstListQuadrupleArray[i].indexInItsList = i;
-                firstListQuadrupleArray[i].index1 = 1;
             }
 
 #pragma omp for schedule(static) nowait
             // to the second list we want to give it more importance (they are the tuples not yet entered)
             for (size_t j = 0; j < positionofOneSize; ++j) {
                 secondListQuadrupleArray[j].index0 = positionOfOne->list[j] - (int)j;
+                secondListQuadrupleArray[j].index1 = 1;
                 secondListQuadrupleArray[j].fromLeft = 0;
                 secondListQuadrupleArray[j].indexInItsList = j;
-                secondListQuadrupleArray[j].index1 = 1;
             }
         }
     }
     else {
         for (size_t i = 0; i < positionOfZeroSize; ++i) {
             firstListQuadrupleArray[i].index0 = positionOfZero->list[i];
+            firstListQuadrupleArray[i].index1 = 1;
             firstListQuadrupleArray[i].fromLeft = 1;
             firstListQuadrupleArray[i].indexInItsList = i;
-            firstListQuadrupleArray[i].index1 = 1;
         }
 
         // to the second list we want to give it more importance (they are the tuples not yet entered)
         for (size_t j = 0; j < positionofOneSize; ++j) {
             secondListQuadrupleArray[j].index0 = positionOfOne->list[j] - (int)j;
+            secondListQuadrupleArray[j].index1 = 1;
             secondListQuadrupleArray[j].fromLeft = 0;
             secondListQuadrupleArray[j].indexInItsList = j;
-            secondListQuadrupleArray[j].index1 = 1;
         }
     }
 
@@ -143,33 +143,33 @@ IntList cww_sort_mergepos(const IntList *firstList, const IntList *secondList, s
 #pragma omp for schedule(static) nowait
             for (size_t i = 0; i < firstListSize; ++i) {
                 firstListQuadrupleArray[i].index0 = firstList->list[i];
+                firstListQuadrupleArray[i].index1 = 1;
                 firstListQuadrupleArray[i].fromLeft = 1;
                 firstListQuadrupleArray[i].indexInItsList = i;
-                firstListQuadrupleArray[i].index1 = 1;
             }
 
 #pragma omp for schedule(static) nowait
             for (size_t j = 0; j < secondListSize; ++j) {
                 secondListQuadrupleArray[j].index0 = secondList->list[j] - (int)j;
+                secondListQuadrupleArray[j].index1 = 1;
                 secondListQuadrupleArray[j].fromLeft = 0;
                 secondListQuadrupleArray[j].indexInItsList = j;
-                secondListQuadrupleArray[j].index1 = 1;
             }
         }
     }
     else {
         for (size_t i = 0; i < firstListSize; ++i) {
             firstListQuadrupleArray[i].index0 = firstList->list[i];
+            firstListQuadrupleArray[i].index1 = 1;
             firstListQuadrupleArray[i].fromLeft = 1;
             firstListQuadrupleArray[i].indexInItsList = i;
-            firstListQuadrupleArray[i].index1 = 1;
         }
 
         for (size_t j = 0; j < secondListSize; ++j) {
             secondListQuadrupleArray[j].index0 = secondList->list[j] - (int)j;
+            secondListQuadrupleArray[j].index1 = 1;
             secondListQuadrupleArray[j].fromLeft = 0;
             secondListQuadrupleArray[j].indexInItsList = j;
-            secondListQuadrupleArray[j].index1 = 1;
         }
     }
 
@@ -179,6 +179,7 @@ IntList cww_sort_mergepos(const IntList *firstList, const IntList *secondList, s
     Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize, parallel);
 
     // let us compute the correct offsetList to add to newQuadrupleArray.index0
+
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
     IntList fromLeftInverse;
     intlist_init(&fromLeftInverse);
@@ -282,7 +283,8 @@ IntList cww_sort_recursive(const IntList *intList, short parallel) {
  * @return the constant-weight word composed of the number of 0s and the position of 1s required.
  */
 IntList cww_merge_after_sort_recursive(int numberOfZero, IntList *positionOfOne, short parallel) {
-    /// List containing the indexes of 0s (the word currently only has 0s).
+    /// List containing the indexes of 0s.
+    /// @note The word currently only has 0s.
     IntList positionOfZero;
     intlist_init(&positionOfZero);
     intlist_reserve(&positionOfZero, numberOfZero);
