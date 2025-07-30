@@ -98,7 +98,7 @@ IntList prefixSumSerial(const IntList *list) {
     int sum = 0;
 
     intlist_append(&result, 0);
-    for(size_t i=0; i < list->listSize; ++i) {
+    for(size_t i = 0; i < list->listSize; ++i) {
         sum += list->list[i];
         intlist_append(&result, sum);
     }
@@ -431,6 +431,7 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
     /// The pairList that contains all the value in the list - <actual_position, element>.
     PairList listPair;
     pairlist_init(&listPair);
+    pairlist_reserve(&listPair, listPair.listSize);
 
     for(size_t i = 0; i < list->listSize; ++i) {
         pairlist_append(&listPair, (int) i, list->list[i]);
