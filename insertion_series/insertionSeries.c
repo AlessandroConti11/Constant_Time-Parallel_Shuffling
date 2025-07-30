@@ -284,41 +284,42 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// Array of quadruple, each quadruple value corresponds to the secondList values.
     Quadruple *secondListQuadrupleArray = malloc(secondListSize * sizeof * secondListQuadrupleArray);
 
+    // create quadruple arrays - [<key, value, fromLeft, indexInOriginalList>]
     if (parallel) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static) nowait
             for(size_t j = 0; j < firstListSize; ++j){
                 firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
+                firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
                 firstListQuadrupleArray[j].fromLeft = 1;
                 firstListQuadrupleArray[j].indexInItsList = 0;
-                firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
             }
 
 #pragma omp for schedule(static)
-            // to the second list we want to give it more importance (they are the tuples not yet entered)
+            // normalize the index 0
             for(size_t j = 0; j < secondListSize; ++j){
                 secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
+                secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
                 secondListQuadrupleArray[j].fromLeft = 0;
                 secondListQuadrupleArray[j].indexInItsList = (int)j;
-                secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
             }
         }
     }
     else {
         for(size_t j = 0; j < firstListSize; ++j){
             firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
+            firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
             firstListQuadrupleArray[j].fromLeft = 1;
             firstListQuadrupleArray[j].indexInItsList = 0;
-            firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
         }
 
-        // to the second list we want to give it more importance (they are the tuples not yet entered)
+        // normalize the index 0
         for(size_t j = 0; j < secondListSize; ++j){
             secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
+            secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
             secondListQuadrupleArray[j].fromLeft = 0;
             secondListQuadrupleArray[j].indexInItsList = (int)j;
-            secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
         }
     }
 
@@ -327,7 +328,9 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
     Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize, parallel);
 
+    // reconstruct the correct position of index 0
     // let us compute the correct offsetList to add to newQuadrupleArray.index0
+
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
     IntList fromLeftInverse;
     intlist_init(&fromLeftInverse);
@@ -434,6 +437,8 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
     }
 
     /// The pairList of positions where to insert an ordered element.
+    /// @details The index is modified. Now it is the actual index where the element must be inserted.
+    /// @note The pairs are sorted by index.
     PairList pairListSorted = insertionseries_sort_recursive(pairList, parallel);
     /// The new sorted pairList containing the original list and the inserted elements.
     PairList finalPairList = insertionseries_sort_merge(&listPair, &pairListSorted, parallel);
