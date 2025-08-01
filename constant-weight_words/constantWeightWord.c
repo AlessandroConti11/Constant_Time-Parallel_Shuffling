@@ -178,8 +178,6 @@ IntList cww_sort_mergepos(const IntList *firstList, const IntList *secondList, s
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
     Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize, parallel);
 
-    // let us compute the correct offsetList to add to newQuadrupleArray.index0
-
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
     IntList fromLeftInverse;
     intlist_init(&fromLeftInverse);

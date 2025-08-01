@@ -21,17 +21,39 @@ void pairlist_init(PairList *list) {
  * @param minimumCapacity the minimum capacity required.
  */
 void pairlist_reserve(PairList *list, size_t minimumCapacity) {
-    if(minimumCapacity > list->listCapacity) {
-        /// The list capacity.
-        size_t capacity = list->listCapacity ? list->listCapacity : 1;
+    /// The previous capacity.
+    size_t previousCapacity = list->listCapacity;
 
-        while(capacity < minimumCapacity) {
-            capacity<<=1;
-        }
+    // Metodo: partendo da minimumCapacity - 1 "propaghi" i bit a 1
+    /// The calculated capacity.
+    size_t capacity = minimumCapacity - 1;
+    // compute the smallest power of 2 greater than the< minimum capacity
+    // starting from the minimum capacity - 1 propagate the bits to 1
+    capacity |= capacity >> 1;
+    capacity |= capacity >> 2;
+    capacity |= capacity >> 4;
+    capacity |= capacity >> 8;
+    capacity |= capacity >> 16;
+    // size_t sizze
+#if SIZE_MAX > UINT32_MAX
+    cap |= cap >> 32;  // se size_t > 32 bit
+#endif
+    // capacity = cap + 1;
+    capacity++;
 
-        list->list = safeRealloc(list->list, capacity * sizeof *list->list);
-        list->listCapacity = capacity;
-    }
+    /// The realloc is necessarily or not.
+    size_t isReallocNeeded = (minimumCapacity > previousCapacity);
+    /// The mux selector.
+    /// @details minimumCapacity > previousCapacity --> -1 = 0xFF...FF
+    /// @details minimumCapacity < previousCapacity --> 0  = 0x00...00
+    size_t muxSelector = (size_t)-isReallocNeeded;
+
+    /// The new capacity
+    size_t newCapacity = (capacity & muxSelector) | (previousCapacity & ~muxSelector);
+
+    list->list = (isReallocNeeded) ? safeRealloc(list->list, newCapacity * sizeof *list->list) : list->list;
+
+    list->listCapacity = (newCapacity & muxSelector) | (previousCapacity & ~muxSelector);
 }
 
 /**
@@ -62,7 +84,7 @@ void pairlist_insert(PairList *list, size_t position, int elementIndex0, int ele
     assert(position <= list->listSize);
 
     pairlist_reserve(list, list->listSize + 1);
-    memmove(list->list + position + 1, list->list + position, (list->listSize - position) * sizeof*list->list);
+    memmove(list->list + position + 1, list->list + position, (list->listSize - position) * sizeof * list->list);
 
     list->list[position].index0 = elementIndex0;
     list->list[position].index1 = elementIndex1;
@@ -76,13 +98,13 @@ void pairlist_insert(PairList *list, size_t position, int elementIndex0, int ele
  * @param listSource the source pairList.
  */
 void pairlist_copy(PairList *listDestination, const PairList *listSource) {
+    assert(listSource->listSize > 0);
+
     listDestination->listSize = listSource->listSize;
     listDestination->listCapacity = listSource->listSize;
-    listDestination->list = listSource->listSize ? malloc(listSource->listSize * sizeof*listSource->list) : NULL;
+    listDestination->list = malloc(listSource->listSize * sizeof * listSource->list);
 
-    if(listSource->listSize) {
-        memcpy(listDestination->list, listSource->list, listSource->listSize * sizeof *listSource->list);
-    }
+    memcpy(listDestination->list, listSource->list, listSource->listSize * sizeof *listSource->list);
 }
 
 /**
