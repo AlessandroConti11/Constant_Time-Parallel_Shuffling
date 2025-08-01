@@ -65,6 +65,8 @@ IntList prefixSumParallel(const IntList *list) {
     size_t listSize = list->listSize;
     /// Output list.
     int *output = malloc((listSize + 1) * sizeof(int));
+    assert(output && "Malloc error!!!");
+
     output[0] = 0;
 
     /// Number of threads used.
@@ -167,6 +169,7 @@ Quadruple *mergeSerial(Quadruple *firstList, size_t firstListSize, Quadruple *se
     size_t resultSize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
     Quadruple *result = malloc(resultSize * sizeof * result);
+    assert(result && "Malloc error!!!");
 
     // merge(L, R) = copy the first; copy the second; sort
     memcpy(result, firstList, firstListSize * sizeof * result);
@@ -192,6 +195,7 @@ Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *
     size_t resultSize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
     Quadruple *result = malloc(resultSize * sizeof * result);
+    assert(result && "Malloc error!!!");
 
     // merge(L, R) = copy the first; copy the second; sort
 #pragma omp parallel sections
@@ -225,8 +229,11 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
 
     /// Array of quadruple, each quadruple value corresponds to the firstList values.
     Quadruple *firstListQuadrupleArray = malloc(firstListSize * sizeof * firstListQuadrupleArray);
+    assert(firstListQuadrupleArray && "Malloc error!!!");
+
     /// Array of quadruple, each quadruple value corresponds to the secondList values.
     Quadruple *secondListQuadrupleArray = malloc(secondListSize * sizeof * secondListQuadrupleArray);
+    assert(secondListQuadrupleArray && "Malloc error!!!");
 
     // create quadruple arrays - [<key, value, fromLeft, indexInOriginalList>]
     if (parallel) {
