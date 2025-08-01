@@ -17,7 +17,7 @@ void bitonicSort(Quadruple *array, size_t startPosition, size_t arraySize, short
 void bitonicMerge(Quadruple *array, size_t startPosition, size_t arraySize, short direaction, short parallel);
 
 int greatestPowerOf2LessThan(const int n);
-void compareAndSwap(Quadruple *a, Quadruple *b, short dir);
+void compareAndSwap(Quadruple *firstElement, Quadruple *secondElement, short direction);
 
 
 #endif //BITONICSORT_H
