@@ -55,8 +55,11 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
 
     /// Array of quadruple, each quadruple value corresponds to the firstList values.
     Quadruple *firstListQuadrupleArray = malloc(positionOfZeroSize * sizeof(Quadruple));
+    assert(firstListQuadrupleArray && "Malloc error!!!");
+
     /// Array of quadruple, each quadruple value corresponds to the firstList values.
     Quadruple *secondListQuadrupleArray = malloc(positionofOneSize * sizeof(Quadruple));
+    assert(secondListQuadrupleArray && "Malloc error!!!");
 
     if (parallel) {
 #pragma omp parallel
@@ -134,8 +137,11 @@ IntList cww_sort_mergepos(const IntList *firstList, const IntList *secondList, s
 
     /// Array of quadruple, each quadruple value corresponds to the firstList values.
     Quadruple *firstListQuadrupleArray = malloc(firstListSize * sizeof(Quadruple));
+    assert(firstListQuadrupleArray  && "Malloc error!!!");
+
     /// Array of quadruple, each quadruple value corresponds to the secondList values.
     Quadruple *secondListQuadrupleArray = malloc(secondListSize * sizeof(Quadruple));
+    assert(secondListQuadrupleArray && "Malloc error!!!");
 
     if (parallel) {
 #pragma omp parallel
