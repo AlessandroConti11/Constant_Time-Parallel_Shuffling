@@ -2,90 +2,6 @@
 
 
 /**
- * Function that compares two quadruple.
- *
- * @note The comparison compares the following quadruple's value:
- * 1. index0;
- * 2. fromLeft;
- * 3. indexInItsList.
- *
- * @param firstQuadruple the first quadruple to compare.
- * @param secondQuadruple the second quadruple to compare.
- * @return firstQuadruple negative value if the first quadruple is less than the first. 0 if the two quadruples are equal. A positive value if the first quadruple is greater.
- */
-int quadrupleComparison(const void *firstQuadruple, const void *secondQuadruple) {
-    /// First quadruple value.
-    const Quadruple *first = firstQuadruple;
-    /// Second quadruple value.
-    const Quadruple *second = secondQuadruple;
-
-    // constant-time
-    return
-        // if first->index0 != second->index0 --> return (first->index0 > second->index0) - (first->index0 < second->index0)
-        (1 - (first->index0 == second->index0)) * ((first->index0 > second->index0) - (first->index0 < second->index0)) +
-        // else if first->fromLeft != second->fromLeft --> return (first->fromLeft > second->fromLeft) - (first->fromLeft < second->fromLeft);
-        ((first->index0 == second->index0) * (1 - (first->fromLeft == second->fromLeft))) * ((first->fromLeft > second->fromLeft) - (first->fromLeft < second->fromLeft)) +
-        // else --> (first->indexInItsList > second->indexInItsList) - (first->indexInItsList < second->indexInItsList);
-        ((first->index0 == second->index0) * (first->fromLeft == second->fromLeft)) * ((first->indexInItsList > second->indexInItsList) - (first->indexInItsList < second->indexInItsList));
-}
-
-/**
- * Function that search the position of a key.
- *
- * @param list the list where to look for the key.
- * @param start the position from which to start searching for the key.
- * @param end the position to search for the key.
- * @param key the key to search.
- * @return the position of the key.
- */
-size_t binarySearch(Quadruple *list, size_t start, size_t end, Quadruple key) {
-    /// The low index.
-    size_t low = start;
-    /// The high index.
-    size_t high = end;
-
-    while (low < high) {
-        /// The mid position.
-        size_t mid = low + (high - low) / 2;
-
-        if (quadrupleComparison(&list[mid], &key) < 0) {
-            low = mid + 1;
-        }
-        else {
-            high = mid;
-        }
-    }
-
-    return low;
-
-
-    // /// The size of the segment to search for.
-    // size_t size = end - start;
-    //
-    // /// The number of bits required to represent size.
-    // size_t sizeBitNumber = 0;
-    // // how many iterations to perform --> floor(log_2(size))
-    // for (size_t s = size; s > 1; s >>= 1) {
-    //     sizeBitNumber++;
-    // }
-    //
-    // for (int i = sizeBitNumber - 1; i >= 0; i--) {
-    //     /// The mid position.
-    //     size_t mid = low + ((high - low) >> 1);
-    //
-    //     /// The mux selector.
-    //     /// @details list[mid] < key --> -1 = 0xFF...FF
-    //     /// @details list[mid] > key --> 0  = 0x00...00
-    //     size_t muxSelector = (size_t)(-(quadrupleComparison(&list[mid], &key) < 0));
-    //
-    //     // cmux
-    //     low  = (low  & !muxSelector) | ((mid + 1) & muxSelector);
-    //     high = (high & !muxSelector) | (mid & muxSelector);
-    // }
-}
-
-
-/**
  * Function that computes the cumulative prefixes of an intList.
  *
  * @note The first element is always 0.
@@ -173,16 +89,14 @@ IntList prefixSumParallel(const IntList *list) {
         size_t chunk = (listSize + numberThread - 1) / numberThread;
         /// Start position.
         size_t start = threadID * chunk;
-        /// End position.
-        size_t end = (start + chunk < listSize) ? start + chunk : listSize;
 
-        // /// The mux selector.
-        // /// @details start + chunk < listSize --> -1 = 0xFF...FF
-        // /// @details start + chunk > listSize --> 0  = 0x00...00
-        // size_t muxSelector = (size_t)(-(start + chunk < listSize));
-        //
-        // /// End position.
-        // size_t end = ((start + chunk) & muxSelector) | (listSize & !muxSelector);
+        /// The mux selector.
+        /// @details start + chunk < listSize --> -1 = 0xFF...FF
+        /// @details start + chunk > listSize --> 0  = 0x00...00
+        size_t muxSelector = (size_t)(-(start + chunk < listSize));
+
+        /// End position.
+        size_t end = ((start + chunk) & muxSelector) | (listSize & !muxSelector);
 
         /// Local sum value.
         int localSum = 0;
@@ -257,7 +171,7 @@ Quadruple *mergeSerial(Quadruple *firstList, size_t firstListSize, Quadruple *se
     // merge(L, R) = copy the first; copy the second; sort
     memcpy(result, firstList, firstListSize * sizeof * result);
     memcpy(result + firstListSize, secondList, secondListSize * sizeof * result);
-    qsort(result, resultSize, sizeof * result, quadrupleComparison);
+    bitonicSort(result, 0, resultSize, ASCENDING, SERIAL);
 
     return result;
 }
@@ -274,24 +188,22 @@ Quadruple *mergeSerial(Quadruple *firstList, size_t firstListSize, Quadruple *se
  * @return the ordered union of the two input lists.
  */
 Quadruple *mergeParallel(Quadruple *firstList, size_t firstListSize, Quadruple *secondList, size_t secondListSize) {
+    // The size of the new list of quadruple.
+    size_t resultSize = firstListSize + secondListSize;
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
-    Quadruple *result = malloc((firstListSize + secondListSize) * sizeof(Quadruple));
-    if (!result) {
-        return NULL;
-    }
+    Quadruple *result = malloc(resultSize * sizeof * result);
 
-#pragma omp parallel
+    // merge(L, R) = copy the first; copy the second; sort
+#pragma omp parallel sections
     {
-#pragma omp for schedule(static)
-        for (size_t i = 0; i < firstListSize; i++) {
-            result[i + binarySearch(secondList, 0, secondListSize, firstList[i])] = firstList[i];
-        }
+#pragma omp section
+        memcpy(result, firstList, firstListSize * sizeof *result);
 
-#pragma omp for schedule(static)
-        for (size_t i = 0; i < secondListSize; i++) {
-            result[i + binarySearch(firstList, 0, firstListSize, secondList[i])] = secondList[i];
-        }
+#pragma omp section
+        memcpy(result + firstListSize, secondList, secondListSize * sizeof *result);
     }
+
+    bitonicSort(result, 0, resultSize, ASCENDING, PARALLEL);
 
     return result;
 }
@@ -321,7 +233,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
 #pragma omp parallel
         {
 #pragma omp for schedule(static) nowait
-            for(size_t j = 0; j < firstListSize; ++j){
+            for(size_t j = 0; j < firstListSize; ++j) {
                 firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
                 firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
                 firstListQuadrupleArray[j].fromLeft = 1;
@@ -330,7 +242,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
 
 #pragma omp for schedule(static)
             // normalize the index 0
-            for(size_t j = 0; j < secondListSize; ++j){
+            for(size_t j = 0; j < secondListSize; ++j) {
                 secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
                 secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
                 secondListQuadrupleArray[j].fromLeft = 0;
@@ -339,7 +251,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
         }
     }
     else {
-        for(size_t j = 0; j < firstListSize; ++j){
+        for(size_t j = 0; j < firstListSize; ++j) {
             firstListQuadrupleArray[j].index0 = firstList->list[j].index0;
             firstListQuadrupleArray[j].index1 = firstList->list[j].index1;
             firstListQuadrupleArray[j].fromLeft = 1;
@@ -347,7 +259,7 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
         }
 
         // normalize the index 0
-        for(size_t j = 0; j < secondListSize; ++j){
+        for(size_t j = 0; j < secondListSize; ++j) {
             secondListQuadrupleArray[j].index0 = secondList->list[j].index0 - (int)j;
             secondListQuadrupleArray[j].index1 = secondList->list[j].index1;
             secondListQuadrupleArray[j].fromLeft = 0;
@@ -360,8 +272,6 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
     /// The new array of quadruple that contains the quadruple of the first and the second input list.
     Quadruple *newQuadrupleArray = merge(firstListQuadrupleArray, firstListSize, secondListQuadrupleArray, secondListSize, parallel);
 
-    // reconstruct the correct position of index 0
-    // let us compute the correct offsetList to add to newQuadrupleArray.index0
 
     /// IntList that contains the inverse of newQuadrupleArray.fromLeft.
     IntList fromLeftInverse;
@@ -404,14 +314,8 @@ PairList insertionseries_sort_merge(const PairList *firstList, const PairList *s
  * @return the pairList sorted.
  */
 PairList insertionseries_sort_recursive(const PairList *pairList, short parallel) {
-    printf("plsrINI: [");
-    for (size_t i = 0; i < pairList->listSize; ++i) {
-        printf("%d ", pairList->list[i].index1);
-    }
-    printf("]\n");
-
     // base case
-    if(pairList->listSize <= 1) {
+    if (pairList->listSize <= 1) {
         /// The sorted pairList.
         PairList result;
 
@@ -441,36 +345,10 @@ PairList insertionseries_sort_recursive(const PairList *pairList, short parallel
         pairlist_append(&right, pairList->list[i].index0, pairList->list[i].index1);
     }
 
-    printf("leftBEF: [");
-    for (size_t i = 0; i < left.listSize; ++i) {
-        printf("%d ", left.list[i].index1);
-    }
-    printf("]\n");
-
     /// The sorted left part of the input pairList.
     PairList sortedLeft = insertionseries_sort_recursive(&left, parallel);
-
-    printf("leftAFT: [");
-    for (size_t i = 0; i < left.listSize; ++i) {
-        printf("%d ", left.list[i].index1);
-    }
-    printf("]\n");
-
-    printf("righBEF: [");
-    for (size_t i = 0; i < right.listSize; ++i) {
-        printf("%d ", right.list[i].index1);
-    }
-    printf("]\n");
-
     /// The sorted right part of the input pairList
     PairList sortedRight = insertionseries_sort_recursive(&right, parallel);
-
-    printf("righAFT: [");
-    for (size_t i = 0; i < right.listSize; ++i) {
-        printf("%d ", right.list[i].index1);
-    }
-    printf("]\n");
-
     /// The initial sorted pairList.
     PairList result = insertionseries_sort_merge(&sortedLeft, &sortedRight, parallel);
 
@@ -491,12 +369,6 @@ PairList insertionseries_sort_recursive(const PairList *pairList, short parallel
  * @return the new intList with the value inserted.
  */
 IntList insertionseries_merge_after_sort_recursive(const IntList *list, const PairList *pairList, short parallel) {
-    printf("list is: [");
-    for (size_t i = 0; i < list->listSize; ++i) {
-        printf("%d ", list->list[i]);
-    }
-    printf("]\n");
-
     /// The pairList that contains all the value in the list - <actual_position, element>.
     PairList listPair;
     pairlist_init(&listPair);
@@ -505,31 +377,12 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
         pairlist_append(&listPair, (int) i, list->list[i]);
     }
 
-    printf("pl   is: [");
-    for (size_t i = 0; i < pairList->listSize; ++i) {
-        printf("%d ", pairList->list[i].index1);
-    }
-    printf("]\n\n");
-
     /// The pairList of positions where to insert an ordered element.
     /// @details The index is modified. Now it is the actual index where the element must be inserted.
     /// @note The pairs are sorted by index.
     PairList pairListSorted = insertionseries_sort_recursive(pairList, parallel);
-
-    printf("\nplsoris: [");
-    for (size_t i = 0; i < pairListSorted.listSize; ++i) {
-        printf("%d ", pairListSorted.list[i].index1);
-    }
-    printf("]\n");
-
     /// The new sorted pairList containing the original list and the inserted elements.
     PairList finalPairList = insertionseries_sort_merge(&listPair, &pairListSorted, parallel);
-
-    printf("afteris: [");
-    for (size_t i = 0; i < finalPairList.listSize; ++i) {
-        printf("%d ", finalPairList.list[i].index1);
-    }
-    printf("]\n");
 
     /// The new intList with the value inserted.
     IntList result;

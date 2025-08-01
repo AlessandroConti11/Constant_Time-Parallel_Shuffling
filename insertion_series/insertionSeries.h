@@ -8,10 +8,12 @@
 #include "../utility/tuple.h"
 #include "../utility/intList.h"
 #include "../utility/pairList.h"
+#include "../utility/bitonicSort.h"
 
 
-int quadrupleComparison(const void *firstQuadruple, const void *secondQuadruple);
-size_t binarySearch(Quadruple *list, size_t start, size_t end, Quadruple key);
+#define PARALLEL 1
+#define SERIAL 0
+
 
 IntList prefixSum(const IntList *list, short parallel);
 IntList prefixSumSerial(const IntList *list);
