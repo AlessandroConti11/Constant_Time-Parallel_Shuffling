@@ -202,10 +202,10 @@ int main(int argc, char **argv) {
     while ((opt = getopt_long(argc, argv, "psh", longOptions, &option_index)) != -1) {
         switch (opt) {
             case 'p':
-                serialOrParallel = 1;
+                serialOrParallel = PARALLEL;
                 break;
             case 's':
-                serialOrParallel = 0;
+                serialOrParallel = SERIAL;
                 break;
             case 'h':
                 print_help(argv[0]);
