@@ -2,9 +2,9 @@
 #define DJB_SAFEREALLOC_H
 
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <assert.h>
 
 
 void *safeRealloc(void *pointerToRealloc, size_t reallocSize);
