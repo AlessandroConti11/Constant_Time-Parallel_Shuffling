@@ -10,7 +10,6 @@ typedef struct {
     int index0;
 } Pair;
 
-
 /// The new type representing a quadruple < index0, fromLeft, indexInItsList, index1>.
 typedef struct {
     /// The first value of the quadruple.
@@ -22,6 +21,9 @@ typedef struct {
     /// The second value of the quadruple.
     int index1;
 } Quadruple;
+
+
+int quadrupleComparison(void *firstQuadruple, const void *secondQuadruple);
 
 
 #endif //DJB_TUPLE_H
