@@ -132,18 +132,9 @@ void mainInsertionSeries(short serialOrParallel) {
     printf("\nThe list after all the insertion\n");
     print_intlist(&listWithNewElement);
 
-    /// The pairList sorted.
-    PairList pairListSort = insertionseries_sort_recursive(&pairList, serialOrParallel);
-
-    puts("\nFinal positions:");
-    for(size_t i=0; i < pairListSort.listSize; ++i) {
-        printf("position %d: %d\n", pairListSort.list[i].index0, pairListSort.list[i].index1);
-    }
-
     intlist_free(&listWithNewElement);
     intlist_free(&intList);
     pairlist_free(&pairList);
-    pairlist_free(&pairListSort);
 }
 
 /**
