@@ -1,5 +1,4 @@
 #include "constantWeightWord.h"
-#include <stdio.h>
 
 /**
  * Function that creates a constant-weight word.
