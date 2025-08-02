@@ -98,8 +98,6 @@ void pairlist_insert(PairList *list, size_t position, int elementIndex0, int ele
  * @param listSource the source pairList.
  */
 void pairlist_copy(PairList *listDestination, const PairList *listSource) {
-    assert(listSource->listSize > 0);
-
     listDestination->listSize = listSource->listSize;
     listDestination->listCapacity = listSource->listSize;
     listDestination->list = malloc(listSource->listSize * sizeof * listSource->list);
