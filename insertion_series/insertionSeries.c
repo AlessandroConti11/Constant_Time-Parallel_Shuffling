@@ -379,7 +379,7 @@ IntList insertionseries_merge_after_sort_recursive(const IntList *list, const Pa
     /// The pairList that contains all the value in the list - <actual_position, element>.
     PairList listPair;
     pairlist_init(&listPair);
-    pairlist_reserve(&listPair, listPair.listSize);
+    pairlist_reserve(&listPair, list->listSize);
 
     for(size_t i = 0; i < list->listSize; ++i) {
         pairlist_append(&listPair, (int) i, list->list[i]);
