@@ -1,5 +1,5 @@
 #include "constantWeightWord.h"
-
+#include <stdio.h>
 
 /**
  * Function that creates a constant-weight word.
@@ -39,11 +39,12 @@ IntList cww_via_insertionseries(int numberOfZero, IntList *positionOfOne, short 
     return result;
 }
 
+
 /**
  * Function that inserts 1s in the correct position to create a constant-weight word.
  *
  * @param positionOfZero the positions of the 0s within the word.
- * @param positionOfOne the positions of the 1s within the word.
+ * @param positionOfOne the positions in which to insert 1s.
  * @param parallel the type of algorithm execution, either parallel mode, 1, or serial mode, 0.
  * @return the constant-weight word with the 1s in correct position.
  */
@@ -61,13 +62,14 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
     Quadruple *secondListQuadrupleArray = malloc(positionofOneSize * sizeof(Quadruple));
     assert(secondListQuadrupleArray && "Malloc error!!!");
 
+    // we are only interested in fromLeft, which tells us whether it comes from the list of zeros (1) or the list of ones (0)
     if (parallel) {
 #pragma omp parallel
         {
 #pragma omp for schedule(static) nowait
             for (size_t i = 0; i < positionOfZeroSize; ++i) {
                 firstListQuadrupleArray[i].index0 = positionOfZero->list[i];
-                firstListQuadrupleArray[i].index1 = 1;
+                firstListQuadrupleArray[i].index1 = 0;
                 firstListQuadrupleArray[i].fromLeft = 1;
                 firstListQuadrupleArray[i].indexInItsList = i;
             }
@@ -85,7 +87,7 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
     else {
         for (size_t i = 0; i < positionOfZeroSize; ++i) {
             firstListQuadrupleArray[i].index0 = positionOfZero->list[i];
-            firstListQuadrupleArray[i].index1 = 1;
+            firstListQuadrupleArray[i].index1 = 0;
             firstListQuadrupleArray[i].fromLeft = 1;
             firstListQuadrupleArray[i].indexInItsList = i;
         }
@@ -110,7 +112,7 @@ IntList cww_sort_mergebits(const IntList *positionOfZero, const IntList *positio
     intlist_reserve(&result, newQuadrupleArraySize);
 
     for (size_t i = 0; i < newQuadrupleArraySize; ++i) {
-        intlist_append(&result, 1 - newQuadrupleArray[i].fromLeft);
+        intlist_append(&result, newQuadrupleArray[i].index1);
     }
 
     // clean the allocated list
