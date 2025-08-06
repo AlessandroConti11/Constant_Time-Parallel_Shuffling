@@ -35,6 +35,7 @@ In addition to simple transcription, the project also analyses the computational
 ## How to run
 
 The steps below refer to a Unix environment, for other environments the commands may change.
+
 0. install gcc
     ```bash
     sudo apt-get install gcc 
