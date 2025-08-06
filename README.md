@@ -69,7 +69,7 @@ The Makefile in the repository can also be used to compile the code.
     ```
 - if you want to specify different tags, you can set them
    ```bash
-   make compile CXXFLAGS=YOUR_FLAGS
+   make CXXFLAGS=YOUR_FLAGS
    ```
 - if you want to remove all .o files and the final executable
     ```bash
