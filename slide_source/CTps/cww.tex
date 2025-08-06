@@ -1,0 +1,1714 @@
+\section{Constant-Weight Word}
+    \begin{frame}{Application of Insertion Series}
+        One application of the \textsc{insertionSeries} algorithm is to map a sequence of integers into a constant-weight binary word.
+
+        \leavevmode        
+        
+        Let us now go on to study this application specifically.
+    \end{frame}
+
+    \begin{frame}{Constant-Weight Binary Word}
+        \begin{definition}[Constant-Weight Binary Word]
+
+            A \textbf{Constant-Weight Binary Word} is a set of binary vectors, \textit{codewords}, of the same length and with the same Hamming weight\footnote{The Hamming weight of a vector is defined as $\hw{\left(\vect{x}\right)} \coloneqq \left\lvert\left\{i \mid x_i \neq 0\right\}\right\rvert$}.
+        \end{definition}
+
+        The linear codes are used in Code-Based Cryptography.
+
+        The algorithm detailed below can be automated to generate different binary words with the same Hamming weight simply by changing the positions of the $1$s to be inserted.
+    \end{frame}
+
+    \begin{frame}{Different Implementation}
+        Daniel J. Bernstein implemented two different algorithms to construct a constant-weight word.
+        \begin{itemize}
+            \item cww\_via\_insertionseries;
+            \item cww\_merge\_after\_sort\_recursive.
+        \end{itemize}
+
+        In the following sections, we will analyse them individually.
+    \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% cww\_via\_insertionseries subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{cww\_via\_insertionseries}
+        \begin{frame}{\textsc{cww\_via\_insertionseries} Description}
+            This solution only uses the \textsc{insertionSeries} algorithm defined previously without any changes.
+        \end{frame}
+
+\newcounter{cwwviainsertionseriesfunctioncounter}
+\setcounter{cwwviainsertionseriesfunctioncounter}{1}
+\newcommand{\cwwviainsertionseriesfunctionframe}{%
+    \ifnum\value{cwwviainsertionseriesfunctioncounter}=1
+        \textsc{cww\_via\_insertionseries} Function%
+    \else
+        \textsc{cww\_via\_insertionseries} Function (\thecwwviainsertionseriesfunctioncounter)%
+    \fi
+    \stepcounter{cwwviainsertionseriesfunctioncounter}
+}
+        \begin{frame}[containsverbatim]{\cwwviainsertionseriesfunctionframe}
+            \begin{minted}[breaklines=true, linenos=true]{python}
+def cww_via_insertionseries(m,X):
+    return insertionseries([0]*m,((x,1) for x in X))
+                \end{minted}
+        \end{frame}
+
+        \begin{frame}[containsverbatim]{\cwwviainsertionseriesfunctionframe}
+            \begingroup
+                \makeatletter
+                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                \makeatother
+                \begin{algorithm}[H]
+                    \tiny
+                    \caption{cww\_via\_insertionseries Function} \label{cww_via_insertionseries function}
+                    \begin{algorithmic}[1]
+                        \Require 
+                            \Statex $numberZero$: the number of $0$s in the constant-weight word
+                            \Statex $onePositions$: the positions in which to insert $1$
+                        \Ensure
+                            \Statex $result$: the constant-weight word
+                        \Statex
+        
+                        \Function{cwwViaInsertionseries}{$numberZero, onePositions$}
+                            \State $zeroPositions \gets \left[\ \right]$
+                            \For{$i = 0$ \textnormal{\textbf{to}} $numberZero$}
+                                \State $zeroPositions{\left[i\right]} \gets i$
+                            \EndFor
+
+                            \State $oneTuples \gets \left[\ \right]$
+                            \For{$i = 0$ \textnormal{\textbf{to}} $onePositions.size$}
+                                \State $oneTuples{\left[i\right]} \gets \left<onePositions{\left[i\right]}, 1\right>$
+                            \EndFor
+
+                            \State $result \gets \Call{insertionseriesMergeAfterSortRecursive}{zeroPositions, oneTuples}$
+
+                            \State \Return $result$
+                        \EndFunction
+                    \end{algorithmic}
+                \end{algorithm}
+            \endgroup
+        \end{frame}
+
+\newcounter{cwwviainsertionseriescostcounter}
+\setcounter{cwwviainsertionseriescostcounter}{1}
+\newcommand{\cwwviainsertionseriescostframe}{%
+    \ifnum\value{cwwviainsertionseriescostcounter}=1
+        \textsc{cww\_via\_insertionseries} Cost%
+    \else
+        \textsc{cww\_via\_insertionseries} Cost (\thecwwviainsertionseriescostcounter)%
+    \fi
+    \stepcounter{cwwviainsertionseriescostcounter}
+}  
+        \begin{frame}{\cwwviainsertionseriescostframe}
+            \footnotesize
+            Let $n \coloneqq numberZero$ and $m \coloneqq onePositions.size$.
+            \begin{align*}
+                \textcolor{blue}{{\mathcal{C}{\left(n, m\right)}}} = & \; \mathcal{C}_{intlist\_init}{\left(n\right)} + \mathcal{C}_{intlist\_reserve}{\left(n\right)} + n \cdot \mathcal{C}_{intlist\_append}{\left(n\right)} + \\
+                & + \mathcal{C}_{pairlist\_init}{\left(m\right)} + \mathcal{C}_{pairlist\_reserve}{\left(m\right)} + m \cdot \mathcal{C}_{pairlist\_append}{\left(m\right)} + \\
+                & + \mathcal{C}_{insertionseries\_merge\_after\_sort\_recursive}{\left(n, m\right)} + \\
+                & + \mathcal{C}_{intlist\_free}{\left(n\right)} + \mathcal{C}_{pairlist\_free}{\left(m\right)} = \\
+                = & \; 1 + n + n \cdot 1 + 1 + m + m \cdot 1 + \\
+                & + \left(2 \cdot n + 10 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)} + 17\right) + \\
+                & + 1 + 1 = \\
+                = & \; 2 \cdot n + 12 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + 21 + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)} = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2 + m \cdot \left(\log{\left(m\right)}\right)^3\right)}}
+            \end{align*}
+        \end{frame}
+
+        \begin{frame}{\cwwviainsertionseriescostframe}
+            \begin{align*}
+                \textcolor{blue}{\mathcal{S}{\left(n , m\right)}} = & \; \mathcal{S}_{IntList}{\left(n\right)} + \mathcal{S}_{PairList}{\left(m\right)} + \mathcal{S}_{IntList}{\left(n + m\right)} = \\
+                = & \; \left(n \cdot \SI{4}{B} + \SI{16}{B}\right) + \left(m \cdot \SI{8}{B} + \SI{16}{B}\right) + \left(\left(n + m\right) \cdot \SI{4}{B} + \SI{16}{B}\right) = \\
+                = & \; \SI{4}{B} \cdot m + \SI{8}{B} \cdot \left(n + m\right) + \SI{48}{B} = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+            \end{align*}
+        \end{frame}        
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ad-Hoc cww\_algorithm subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{Ad-Hoc cww\_algorithm}
+        \begin{frame}{Ad-Hoc cww\_algorithm}
+            This algorithm represents an optimization of the previous one and, as such, also uses the \textsc{merge} and \textsc{prefixSum} functions. These functions will no longer be described explicitly, as they are considered implicit and have not been modified from their previous definition.
+
+            \leavevmode
+
+            Now, we will analyse all the complexities of the auxiliary functions until we reach the actual complexity of the algorithm for creating a constant-weight word.
+        \end{frame}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % cww\_sort\_mergebits subsubsection %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        \subsubsection{cww\_sort\_mergebits}
+\newcounter{cwwsortmergebitsfunctioncounter}
+\setcounter{cwwsortmergebitsfunctioncounter}{1}
+\newcommand{\cwwsortmergebitsfunctionframe}{%
+    \ifnum\value{cwwsortmergebitsfunctioncounter}=1
+        \textsc{cww\_sort\_mergebits} Function%
+    \else
+        \textsc{cww\_sort\_mergebits} Function (\thecwwsortmergebitsfunctioncounter)%
+    \fi
+    \stepcounter{cwwsortmergebitsfunctioncounter}
+}
+            \begin{frame}[containsverbatim]{\cwwsortmergebitsfunctionframe}
+                \begin{minted}[breaklines=true, linenos=true]{python}
+def cww_sort_mergebits(L,R):
+    L = [(x,1) for x in L]
+    R = [(x-j,0) for j,x in enumerate(R)]
+    M = merge(L,R)
+    return [1-fromL for _,fromL in M]
+                    \end{minted}
+            \end{frame}
+
+            \begin{frame}[containsverbatim]{\cwwviainsertionseriesfunctionframe}
+                \begingroup
+                    \makeatletter
+                    \renewcommand{\alglinenumber}[1]{\tiny#1}
+                    \makeatother
+                    \begin{algorithm}[H]
+                        \tiny
+                        \caption{cww\_sort\_mergebits Function} \label{cww_via_mergebits function}
+                        \begin{multicols}{2}
+                            \begin{algorithmic}[1]
+                                \Require 
+                                    \Statex $zeroPositions$: the positions of the $0$s
+                                    \Statex $onePositions$: the positions in which to insert $1$
+                                \Ensure
+                                    \Statex $result$: the constant-weight word
+                                \Statex
+                
+                                \Function{cwwSortMergebits}{$zeroPositions, onePositions$}
+                                    \State $zeroQuadruples \gets \left[\ \right]$
+                                    \For{$i = 0$ \textnormal{\textbf{to}} $zeroPositions.size$}
+                                        \State $zeroQuadruples{\left[i\right]} \gets \left<zeroPositions{\left[i\right]}, 0, 1, i\right>$
+                                    \EndFor
+    
+                                    \State $oneQuadruples \gets \left[\ \right]$
+                                    \For{$j = 0$ \textnormal{\textbf{to}} $onePositions.size$}
+                                        \State $oneQuadruples{\left[j\right]} \gets \left<onePositions{\left[j\right]} - j, 1, 0, j\right>$
+                                    \EndFor
+    
+                                    \State $quadruplesMerged \gets \Call{merge}{zeroQuadruples, oneQuadruples}$
+    
+                                    \State $result \gets \left[\ \right]$
+                                    \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                        \State $\left<\_, bit, \_, \_\right> \gets quadruplesMerged{\left[i\right>]}$
+                                        \State $result{\left[i\right]} \gets bit$
+                                    \EndFor
+        
+                                    \State \Return $result$
+                                \EndFunction
+                            \end{algorithmic}
+                        \end{multicols}
+                    \end{algorithm}
+                \endgroup
+            \end{frame}
+
+\newcounter{cwwsortmergebitscostcounter}
+\setcounter{cwwsortmergebitscostcounter}{1}
+\newcommand{\cwwsortmergebitscostframe}{%
+    \ifnum\value{cwwsortmergebitscostcounter}=1
+        \textsc{cww\_sort\_mergebits} Cost%
+    \else
+        \textsc{cww\_sort\_mergebits} Cost (\thecwwsortmergebitscostcounter)%
+    \fi
+    \stepcounter{cwwsortmergebitscostcounter}
+}
+            \begin{frame}{\cwwsortmergebitscostframe}
+                Let $n \coloneqq zeroPositions.size$ and $m \coloneqq onePositions.size$.
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{C}{\left(n, m\right)}} = & \; \mathcal{C}_{malloc}{\left(n\right)} + \mathcal{C}_{malloc}{\left(m\right)} + n + m + \mathcal{C}_{merge}{\left(n, m\right)} + \mathcal{C}_{intlist\_init}{\left(n + m\right)} + \\
+                    & + \mathcal{C}_{intlist\_reserve}{\left(n + m\right)} + \left(n + m\right) \cdot \mathcal{C}_{intlist\_append}{\left(n + m\right)} + \\
+                    & + \mathcal{C}_{free}{\left(n\right)} + \mathcal{C}_{free}{\left(m\right)} + \mathcal{C}_{free}{\left(n + m\right)} = \\
+                    = & \; 1 + 1 + n + m + \left(1 + n + m + \left(\frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2}\right)\right) + \\
+                    & + 1 + \left(n + m\right) + \left(n + m\right) \cdot 1 + 1 + 1 + 1 = \\
+                    = & \; 4 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + 7 = \\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2\right)}}
+                \end{align*}
+            \end{frame}
+
+            \begin{frame}{\cwwsortmergebitscostframe}
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{S}{\left(n , m\right)}} = & \; 3 \cdot \mathcal{S}_{size\_t} + \mathcal{S}_{\textnormal{*}Quadruple}{\left(n\right)} + \mathcal{S}_{\textnormal{*}Quadruple}{\left(m\right)} + \mathcal{S}_{\textnormal{*}Quadruple}{\left(n + m\right)} + \\
+                    & + \mathcal{S}_{IntList}{\left(n + m\right)} = \\
+                    = & \; 3 \cdot \SI{8}{B} + \left(n \cdot \SI{16}{B}\right) + \left(m \cdot \SI{16}{B}\right) + \left(\left(n + m\right) \cdot \SI{16}{B}\right) + \\
+                    & + \left(\left(n + m\right) \cdot \SI{4}{B} + \SI{16}{B}\right) = \\
+                    = & \; \SI{36}{B} \cdot \left(n + m\right) + \SI{40}{B} = \\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+                \end{align*}
+            \end{frame}           
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % cww\_sort\_mergepos subsubsection %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        \subsubsection{cww\_sort\_mergepos}
+\newcounter{cwwSortMergePosfunctioncounter}
+\setcounter{cwwSortMergePosfunctioncounter}{1}
+\newcommand{\cwwSortMergePosfunctionframe}{%
+    \ifnum\value{cwwSortMergePosfunctioncounter}=1
+        \textsc{cww\_sort\_mergepos} Function%
+    \else
+        \textsc{cww\_sort\_mergepos} Function (\thecwwSortMergePosfunctioncounter)%
+    \fi
+    \stepcounter{cwwSortMergePosfunctioncounter}
+}
+            \begin{frame}[containsverbatim]{\cwwSortMergePosfunctionframe}
+                \begin{minted}[breaklines=true, linenos=true]{python}
+def cww_sort_mergepos(L,R):
+    L = [(x,1) for x in L]
+    R = [(x-j,0) for j,x in enumerate(R)]
+    M = merge(L,R)
+    offsets = prefixsums(1-fromL for _,fromL in M)
+    return [x+offset for (x,_),offset in zip(M,offsets)]
+                    \end{minted}
+            \end{frame}
+
+            \begin{frame}[containsverbatim]{\cwwSortMergePosfunctionframe}
+                \begingroup
+                    \makeatletter
+                    \renewcommand{\alglinenumber}[1]{\tiny#1}
+                    \makeatother
+                    \begin{algorithm}[H]
+                        \tiny
+                        \caption{cww\_sort\_mergepos Function} \label{cww_sort_mergepos function}
+                        \begin{multicols}{2}
+                            \begin{algorithmic}[1]
+                                \Require 
+                                    \Statex $array1$: the first array that needs to be merged
+                                    \Statex $array2$: the second array that needs to be merged
+                                \Ensure
+                                    \Statex $result$: the ordered union of the two input array
+                                \Statex
+                
+                                \Function{cwwSortMergePos}{$array1, array2$}
+                                    \State $quadruples1 \gets \left[\ \right]$
+                                    \For{$i = 0$ \textnormal{\textbf{to}} $array1.size$}
+                                        \State $quadruples1 \gets \left<array1{\left[i\right]}, 0, \texttt{fromA1}, 0\right>$
+                                    \EndFor
+    
+                                    \State $quadruples2 \gets \left[\ \right]$
+                                    \For{$j = 0$ \textnormal{\textbf{to}} $array2.size$}
+                                        \State $quadruples2{\left[j\right]} \gets \left<array2{\left[j\right]} - j, 1, \texttt{fromA2}, j\right>$
+                                    \EndFor
+    
+                                    \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+    
+                                    \State $inverses \gets \left[\ \right]$
+                                    \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                        \State $\left<\_, \_, fromArray, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                        \State $inverses{\left[i\right]} \gets 1 - fromArray$
+                                    \EndFor
+    
+                                    \State $offsets \gets \Call{prefixSum}{inverses}$
+    
+                                    \State $result \gets \left[\ \right]$
+                                    \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                        \State $\left<position, \_, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                        \State $result{\left[i\right]} \gets position + offsets{\left[i\right]}$
+                                    \EndFor                               
+        
+                                    \State \Return $result$
+                                \EndFunction
+                            \end{algorithmic}
+                        \end{multicols}
+                    \end{algorithm}
+                \endgroup
+            \end{frame}
+
+\newcounter{cwwSortMergePoscostcounter}
+\setcounter{cwwSortMergePoscostcounter}{1}
+\newcommand{\cwwSortMergePoscostframe}{%
+    \ifnum\value{cwwSortMergePoscostcounter}=1
+        \textsc{cww\_sort\_mergepos} Cost%
+    \else
+        \textsc{cww\_sort\_mergepos} Cost (\thecwwSortMergePoscostcounter)%
+    \fi
+    \stepcounter{cwwSortMergePoscostcounter}
+}
+            \begin{frame}{\cwwSortMergePoscostframe}
+                \small
+                Let $n \coloneqq array1.size$ and $m \coloneqq array2.size$.
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{C}{\left(n, m\right)}} = & \; \mathcal{C}_{malloc}{\left(n\right)} + \mathcal{C}_{malloc}{\left(m\right)} + n + m + \mathcal{C}_{merge}{\left(n, m\right)} + 2 \cdot \mathcal{C}_{intlist\_init}{\left(n + m\right)} + \\
+                    & + 2 \cdot \mathcal{C}_{intlist\_reserve}{\left(n + m\right)} + 2 \cdot \left(n + m\right) \cdot \mathcal{C}_{intlist\_append}{\left(n + m\right)} + \\
+                    & + \mathcal{C}_{prefixSum}{\left(n + m\right)} + \mathcal{C}_{free}{\left(n\right)} + \mathcal{C}_{free}{\left(m\right)} + \mathcal{C}_{free}{\left(n + m\right)} + \\
+                    & + \mathcal{C}_{intlist\_free}{\left(n + m\right)} + \mathcal{C}_{intlist\_free}{\left(n + m + 1\right)} = \\
+                    = & \; 1 + 1 + n + m + \left(1 + n + m + \left(\frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2}\right)\right) + \\
+                    & + 2 \cdot 1 + 2 \cdot \left(n + m\right) + 2 \cdot \left(n + m\right) \cdot 1 + \left(2 \cdot n + 2\right) + 1 + 1 + 1 + 1 + 1 = \\
+                    = & \; 2 \cdot n + 6 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + 12 = \\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2\right)}}
+                \end{align*}
+            \end{frame}
+
+            \begin{frame}{\cwwSortMergePoscostframe}
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{S}{\left(n , m\right)}} = & \; 3 \cdot \mathcal{S}_{size\_t} + \mathcal{S}_{\textnormal{*}Quadruple}{\left(n\right)} + \mathcal{S}_{\textnormal{*}Quadruple}{\left(m\right)} + \mathcal{S}_{\textnormal{*}Quadruple}{\left(n + m\right)} + \\
+                    & + 2 \cdot \mathcal{S}_{IntList}{\left(n + m\right)} + \mathcal{S}_{IntList}{\left(n + m + 1\right)} = \\
+                    = & \; 3 \cdot \SI{8}{B} + n \cdot \SI{16}{B} + m \cdot \SI{16}{B} + \left(n + m\right) \cdot \SI{16}{B} + \\
+                    & + 2 \cdot \left(\left(n + m\right) \cdot \SI{4}{B} + \SI{16}{B}\right) + \left(\left(n + m + 1\right) \cdot \SI{4}{B} + \SI{16}{B}\right) = \\
+                    = & \; \SI{44}{B} \cdot \left(n + m\right) + \SI{76}{B} = \\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+                \end{align*}
+            \end{frame}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % cww\_sort\_recursive subsubsection %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        \subsubsection{cww\_sort\_recursive}
+\newcounter{cwwsortrecursivefunctioncounter}
+\setcounter{cwwsortrecursivefunctioncounter}{1}
+\newcommand{\cwwsortrecursivefunctionframe}{%
+    \ifnum\value{cwwsortrecursivefunctioncounter}=1
+        \textsc{cww\_sort\_recursive} Function%
+    \else
+        \textsc{cww\_sort\_recursive} Function (\thecwwsortrecursivefunctioncounter)%
+    \fi
+    \stepcounter{cwwsortrecursivefunctioncounter}
+}
+            \begin{frame}[containsverbatim]{\cwwsortrecursivefunctionframe}
+                \begin{minted}[breaklines=true, linenos=true]{python}
+def cww_sort_recursive(X):
+    X = list(X)
+    t = len(X)
+    if t <= 1: return X
+    s = t//2
+    L = cww_sort_recursive(X[:s])
+    R = cww_sort_recursive(X[s:])
+    return cww_sort_mergepos(L,R)
+                    \end{minted}
+            \end{frame}
+
+            \begin{frame}[containsverbatim]{\cwwsortrecursivefunctionframe}
+                \begingroup
+                    \makeatletter
+                    \renewcommand{\alglinenumber}[1]{\tiny#1}
+                    \makeatother
+                    \begin{algorithm}[H]
+                        \tiny
+                        \caption{cww\_sort\_recursive Function} \label{cww_sort_recursive function}
+                        \begin{multicols}{2}
+                            \begin{algorithmic}[1]
+                                \Require 
+                                    \Statex $array$: the array to be sort
+                                \Ensure
+                                    \Statex $result$: the sorted array
+                                \Statex
+                
+                                \Function{cwwSortRecursive}{$array$}
+                                    \If{$array.size \leq 1$}
+                                        \State $result \gets array$
+                                        \State \Return $result$
+                                    \EndIf
+
+                                    \State $left \gets \left[\ \right]$
+                                    \For{$i = 0$ \textnormal{\textbf{to}} $\frac{array.size}{2}$}
+                                        \State $left{\left[i\right]} \gets array{\left[i\right]}$
+                                    \EndFor
+
+                                    \State $right \gets\left[\ \right]$
+                                    \For{$j = \frac{array.size}{2}$ \textnormal{\textbf{to}} $array.size$}
+                                        \State $right{\left[j\right]} \gets array{\left[j\right]}$
+                                    \EndFor
+
+                                    \State $leftSorted \gets \Call{cwwSortRecursive}{left}$
+                                    \State $rightSorted \gets \Call{cwwSortRecursive}{right}$
+
+                                    \State $result \gets \Call{cwwSortMergePos}{leftSorted, rightSorted}$
+        
+                                    \State \Return $result$
+                                \EndFunction
+                            \end{algorithmic}
+                        \end{multicols}
+                    \end{algorithm}
+                \endgroup
+            \end{frame}
+
+\newcounter{cwwsortrecursivecostcounter}
+\setcounter{cwwsortrecursivecostcounter}{1}
+\newcommand{\cwwsortrecursivecostframe}{%
+    \ifnum\value{cwwsortrecursivecostcounter}=1
+        \textsc{cww\_sort\_recursive} Cost%
+    \else
+        \textsc{cww\_sort\_recursive} Cost (\thecwwsortrecursivecostcounter)%
+    \fi
+    \stepcounter{cwwsortrecursivecostcounter}
+}
+            \begin{frame}{\cwwsortrecursivecostframe}
+                \begin{columns}[c]
+                    \begin{column}{0.7\textwidth}
+                        \footnotesize
+                        Let $n \coloneqq array.size$.
+                        \begin{align*}
+                            \mathcal{C}{\left(n\right)} = & \; \begin{cases}
+                                \mathcal{C}_{intlist\_copy}{\left(n\right)} & n \leq 1 \\
+                                2 \cdot \left(\mathcal{C}_{intlist\_init}{\left(\frac{n}{2}\right)} + \mathcal{C}_{intlist\_reserve}{\left(\frac{n}{2}\right)}\right) + n \cdot \mathcal{C}_{intlist\_append}{\left(\frac{n}{2}\right)} + \\
+                                \quad + 2 \cdot \mathcal{C}{\left(\frac{n}{2}\right)} + \mathcal{C}_{cww\_sort\_mergepos}{\left(\frac{n}{2}, \frac{n}{2}\right)} + 4 \cdot \mathcal{C}_{intlist\_free}{\left(\frac{n}{2}\right)} & n > 1
+                            \end{cases} 
+                            \\
+                            = & \; \begin{cases}
+                                n & n \leq 1 \\
+                                2 \cdot \left(1 + \frac{n}{2}\right) + n \cdot 1 + 2 \cdot \mathcal{C}{\left(\frac{n}{2}\right)} + \\
+                                \quad + \mathcal{O}{\left(\left(\frac{n}{2} + \frac{n}{2}\right) \cdot \left(\log{\left(\frac{n}{2} + \frac{n}{2}\right)}\right)^2\right)} + 4 \cdot 1 & n > 1
+                            \end{cases} \\
+                            = & \; \begin{cases}
+                                1 & n \leq 1 \\
+                                2 \cdot \mathcal{C}{\left(\frac{n}{2}\right)} + 2 \cdot n + 6 + \mathcal{O}{\left(n \cdot \left(\log{\left(n\right)}\right)^2\right)} & n > 1
+                            \end{cases}
+                        \end{align*}
+                    \end{column}
+
+                    \begin{column}{0.25\textwidth}
+                        What is currently shown is the time complexity of an iteration; to find the total complexity, the \textit{master theorem} must be applied.
+                    \end{column}
+                \end{columns}
+            \end{frame}
+
+            \begin{frame}{\cwwsortrecursivecostframe}
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{C}{\left(n\right)}} = & \; 2 \cdot \mathcal{C}{\left(\frac{n}{2}\right)} + \mathcal{O}{\left(n \cdot \left(\log{\left(n\right)}\right)^2\right)} = \\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(n \cdot \left(\log{\left(n\right)}\right)^3\right)}}
+                \end{align*}
+            \end{frame}
+
+            \begin{frame}{\cwwsortrecursivecostframe}
+                \begin{columns}[c]
+                    \begin{column}{0.48\textwidth}
+                        \tiny
+                        \begin{align*}
+                            \mathcal{S}_{iteration}{\left(n\right)} = & \; \begin{cases}
+                                \mathcal{S}_{IntList}{\left(n\right)} & n \leq 1 \\
+                                2 \cdot \mathcal{S}_{size\_t} + 4 \cdot \mathcal{S}_{IntList}{\left(\frac{n}{2}\right)} + \mathcal{S}_{IntList}{\left(n\right)} & n > 1
+                            \end{cases} \\
+                            = & \; \begin{cases}
+                                \SI{4}{B} \cdot n + \SI{16}{B} & n \leq 1 \\
+                                2 \cdot \SI{8}{B} + 4 \cdot \left(\frac{n}{2} \cdot \SI{4}{B} + \SI{16}{B}\right) + \left(n \cdot \SI{4}{B} + \SI{16}{B}\right) & n > 1
+                            \end{cases} \\
+                            = & \; \begin{cases}
+                                \SI{20}{B} & n \leq 1 \\
+                                \SI{12}{B} \cdot n + \SI{96}{B} & n > 1
+                            \end{cases}
+                        \end{align*}
+                    \end{column}
+    
+                    \begin{column}{0.48\textwidth}
+                        \footnotesize
+                        \begin{align*}
+                            \textcolor{blue}{\mathcal{S}{\left(n\right)}} = & \; \sum_{i = 0}^{\log{n}}{\mathcal{S}_{iteration}{\left(\frac{n}{2^i}\right)}} = \\
+                            = & \; \SI{12}{B} \cdot n \cdot \sum_{i = 0}^{\log{n}}{\frac{1}{2^i}} + \SI{96}{B} \cdot \sum_{i = 0}^{\log{n}}{1} = \\
+                            < & \; \SI{12}{B} \cdot n \cdot \left(2 - \frac{1}{n}\right) + \SI{96}{B} \cdot \left(\log{n} + 1\right) = \\
+                            = & \; \SI{24}{B} \cdot n + \SI{96}{B} \cdot \log{n} + \SI{84}{B} \\
+                            = & \; \textcolor{blue}{\mathcal{O}{\left(n\right)}}
+                        \end{align*}
+                    \end{column}                
+                \end{columns}
+            \end{frame}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % cww\_merge\_after\_sort\_recursive subsubsection %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        \subsubsection{cww\_merge\_after\_sort\_recursive}
+\newcounter{cwwmergeaftersortrecursivefunctioncounter}
+\setcounter{cwwmergeaftersortrecursivefunctioncounter}{1}
+\newcommand{\cwwmergeaftersortrecursivefunctionframe}{%
+    \ifnum\value{cwwmergeaftersortrecursivefunctioncounter}=1
+        \textsc{cww\_merge\_after\_sort\_recursive} Function%
+    \else
+        \textsc{cww\_merge\_after\_sort\_recursive} Function (\thecwwmergeaftersortrecursivefunctioncounter)%
+    \fi
+    \stepcounter{cwwmergeaftersortrecursivefunctioncounter}
+}
+            \begin{frame}[containsverbatim]{\cwwmergeaftersortrecursivefunctionframe}
+                \begin{minted}[breaklines=true, linenos=true]{python}
+def cww_merge_after_sort_recursive(m,X):
+    return cww_sort_mergebits(range(m),cww_sort_recursive(X))
+                    \end{minted}
+            \end{frame}
+
+            \begin{frame}[containsverbatim]{\cwwmergeaftersortrecursivefunctionframe}
+                \begingroup
+                    \makeatletter
+                    \renewcommand{\alglinenumber}[1]{\scriptsize#1}
+                    \makeatother
+                    \begin{algorithm}[H]
+                        \scriptsize
+                        \caption{cww\_merge\_after\_sort\_recursive Function} \label{cww_merge_after_sort_recursive function}
+                        \begin{algorithmic}[1]
+                            \Require 
+                                \Statex $numberZero$: the number of $0$s in the constant-weight word
+                                \Statex $onePositions$: the positions in which to insert $1$
+                            \Ensure
+                                \Statex $result$: the constant-weight word
+                            \Statex
+            
+                            \Function{cwwMergeAfterSortRecursive}{$numberZero, onePositions$}
+                                \State $zeroPositions \gets \left[\ \right]$
+                                \For{$i = 0$ \textnormal{\textbf{to}} $numberZero$}
+                                    \State $zeroPositions{\left[i\right]} \gets i$
+                                \EndFor
+
+                                \State $onePositionSorted \gets \Call{cwwSortRecursive}{onePositions}$
+
+                                \State $result \gets \Call{cwwSortMergebits}{zeroPositions, onePositionSorted}$
+    
+                                \State \Return $result$
+                            \EndFunction
+                        \end{algorithmic}
+                    \end{algorithm}
+                \endgroup
+            \end{frame}
+
+\newcounter{cwwmergeaftersortrecursivecostcounter}
+\setcounter{cwwmergeaftersortrecursivecostcounter}{1}
+\newcommand{\cwwmergeaftersortrecursivecostframe}{%
+    \ifnum\value{cwwmergeaftersortrecursivecostcounter}=1
+        \textsc{cww\_merge\_after\_sort\_recursive} Cost%
+    \else
+        \textsc{cww\_merge\_after\_sort\_recursive} Cost (\thecwwmergeaftersortrecursivecostcounter)%
+    \fi
+    \stepcounter{cwwmergeaftersortrecursivecostcounter}
+}
+            \begin{frame}{\cwwmergeaftersortrecursivecostframe}
+                \footnotesize
+                Let $n \coloneqq numberZero$ and $m \coloneqq onePositions.size$.
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{C}{\left(n, m\right)}} = & \; \mathcal{C}_{intlist\_init}{\left(n\right)} + \mathcal{C}_{intlist\_reserve}{\left(n\right)} + n \cdot \mathcal{C}_{intlist\_append}{\left(n\right)} + \\
+                    & + \mathcal{C}_{cww\_sort\_recursive}{\left(m\right)} + \mathcal{C}_{cww\_sort\_mergebits}{\left(n, m\right)} + \\
+                    & + \mathcal{C}_{intlist\_free}{\left(n\right)} + \mathcal{C}_{intlist\_free}{\left(m\right)} = \\
+                    = & \; 1 + n + n \cdot 1 + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)} + \\
+                    & + \left(4 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + 7\right) + \\
+                    & + 1 + 1 = \\
+                    = & \; 2 \cdot n + 4 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + 10 + \\
+                    & + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)} = \\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2 + m \cdot \left(\log{\left(m\right)}\right)^3\right)}}
+                \end{align*}
+            \end{frame}
+
+            \begin{frame}{\cwwmergeaftersortrecursivecostframe}
+                \begin{align*}
+                    \textcolor{blue}{\mathcal{S}{\left(n , m\right)}} = & \; \mathcal{S}_{IntList}{\left(n\right)} + \mathcal{S}_{IntList}{\left(m\right)} + \mathcal{S}_{IntList}{\left(n + m\right)} = \\
+                    = & \; \left(n \cdot \SI{4}{B} + \SI{16}{B}\right) + \left(m \cdot \SI{4}{B} + \SI{16}{B}\right) + \left(\left(n + m\right) \cdot \SI{4}{B} + \SI{16}{B}\right) = \\
+                    = & \; \SI{8}{B} \cdot \left(n + m\right) + \SI{48}{B} =\\
+                    = & \; \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+                \end{align*}
+            \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ad-Hoc cww_algorithm Example subsubsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{Ad-Hoc cww\_algorithm Example}
+\newcounter{cwwalgortihmexamplecounter}
+\setcounter{cwwalgortihmexamplecounter}{1}
+\newcommand{\cwwalgortihmexampleframe}{%
+    \ifnum\value{cwwalgortihmexamplecounter}=1
+        Ad-Hoc cww\_algorithm Example%
+    \else
+        Ad-Hoc cww\_algorithm Example (\thecwwalgortihmexamplecounter)%
+    \fi
+    \stepcounter{cwwalgortihmexamplecounter}
+}
+        \begin{frame}{\cwwalgortihmexampleframe}
+            Now let's look at an example that shows how the algorithm works.
+
+            \begin{itemize}
+                \item Consider the following number of $0s$ in the constant-weight word:
+                \begin{align*}
+                    numberZero \coloneqq 5
+                \end{align*}
+
+                \item Consider the following array of positions in which to add a $1$:
+                \begin{align*}
+                    onePositions \coloneqq \begin{bmatrix}
+                        3 & 5 % 0 & 8
+                    \end{bmatrix}
+                \end{align*}
+            \end{itemize}
+\end{frame}
+
+% TODO cww\_merge\_after\_sort\_recursive Function
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.32cm}
+            \begin{columns}[c]
+                \begin{column}{0.45\textwidth}
+                    \noindent \scalebox{1}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_merge\_after\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $numberZero$: the number of $0$s in the constant-weight word
+                                            \Statex $onePositions$: the positions in which to insert $1$
+                                        \Ensure
+                                            \Statex $result$: the constant-weight word
+                                        \Statex
+                        
+                                        \Function{cwwMergeAfterSortRecursive}{$numberZero, onePositions$}
+                                            \State $zeroPositions \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $numberZero$}
+                                                \State $zeroPositions{\left[i\right]} \gets i$
+                                            \EndFor
+
+                                            \label{cwwMergeAfterSortRecursive before onePositionSorted}
+                                            \State $onePositionSorted \gets \Call{cwwSortRecursive}{onePositions}$
+                                            \label{cwwMergeAfterSortRecursive after onePositionSorted}
+
+                                            \label{cwwMergeAfterSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergebits}{zeroPositions, onePositionSorted}$
+                                            \label{cwwMergeAfterSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.55\textwidth}
+                    \begin{itemize}
+                        \item Before $onePositionSorted$ \cref{cwwMergeAfterSortRecursive before onePositionSorted}
+                        \begin{align*}
+                            numberZero & = 5 \\
+                            onePositions & = \begin{bmatrix}3 & 5 & 0 & 8\end{bmatrix}
+                        \end{align*}
+                    \end{itemize}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.2cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array
+                                        \Statex
+                        
+                                        \Function{cwwSortRecursive}{$array$}
+                                            \label{cwwSortRecursive input}
+                                            \If{$array.size \leq 1$}
+                                                \label{cwwSortRecursive base case}
+                                                \State $result \gets array$
+                                                \State \Return $result$
+                                            \EndIf
+        
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{array.size}{2}$}
+                                                \State $left{\left[i\right]} \gets array{\left[i\right]}$
+                                            \EndFor
+        
+                                            \State $right \gets\left[\ \right]$
+                                            \For{$j = \frac{array.size}{2}$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $right{\left[j\right]} \gets array{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{cwwSortRecursive before leftsorted}
+                                            \State $leftSorted \gets \Call{cwwSortRecursive}{left}$
+                                            \label{cwwSortRecursive after leftsorted}
+                                            
+                                            \label{cwwSortRecursive before rightsorted}
+                                            \State $rightSorted \gets \Call{cwwSortRecursive}{right}$
+                                            \label{cwwSortRecursive after rightsorted}
+
+                                            \label{cwwSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergePos}{leftSorted, rightSorted}$
+                                            \label{cwwSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.1cm}
+                    \tiny
+                    \noindent \scalebox{0.95}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begin{multicols}{3}
+                                \begin{itemize}
+                                    \item Input \cref{cwwSortRecursive input}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}3 & 5 & 0 & 8\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $leftSorted$ \cref{cwwSortRecursive before leftsorted}
+                                    \begin{align*}
+                                        left = \begin{bmatrix}3 & 5\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortRecursive}
+        
+                                    \item Input \cref{cwwSortRecursive input}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}3 & 5\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $leftSorted$ \cref{cwwSortRecursive before leftsorted}
+                                    \begin{align*}
+                                        left = \begin{bmatrix}3\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortRecursive}
+        
+                                    \item Base case \cref{cwwSortRecursive base case}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}3\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+        
+                                    \item After $leftSorted$ \cref{cwwSortRecursive after leftsorted}
+                                    \begin{align*}
+                                        leftSorted = \begin{bmatrix}3\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $rightSorted$ \cref{cwwSortRecursive before rightsorted}
+                                    \begin{align*}
+                                        right = \begin{bmatrix}5\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortRecursive}
+        
+                                    \item Base case \cref{cwwSortRecursive base case}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}5\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+        
+                                    \item After $rightSorted$ \cref{cwwSortRecursive after rightsorted}
+                                    \begin{align*}
+                                        rightSorted = \begin{bmatrix}5\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $result$ \cref{cwwSortRecursive before result}
+                                    \begin{align*}
+                                        leftSorted & = \begin{bmatrix}3\end{bmatrix} \\
+                                        rightSorted & = \begin{bmatrix}5\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortMergePos}
+                                \end{itemize}
+                            \end{multicols}
+                        \end{minipage}
+                    }
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO cww\_sort\_mergepos
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.7}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_mergepos Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array1$: the first array that needs to be merged
+                                            \Statex $array2$: the second array that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array
+                                        \Statex
+                        
+                                        \Function{cwwSortMergePos}{$array1, array2$}
+                                            \label{cwwSortMergePos input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $array1.size$}
+                                                \State $quadruples1 \gets \left<array1{\left[i\right]}, 0, \texttt{fromA1}, 0\right>$
+                                            \EndFor
+            
+                                            \State $quadruples2 \gets \left[\ \right]$
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $array2.size$}
+                                                \State $quadruples2{\left[j\right]} \gets \left<array2{\left[j\right]} - j, 1, \texttt{fromA2}, j\right>$
+                                            \EndFor
+
+                                            \label{cwwSortMergePos before quadruplesMerged}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{cwwSortMergePos after quadruplesMerged}
+            
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromArray, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromArray$
+                                            \EndFor
+                                            \label{cwwSortMergePos after inverses}
+
+                                            \label{cwwSortMergePos before offsets}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{cwwSortMergePos after offsets}
+            
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<position, \_, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $result{\left[i\right]} \gets position + offsets{\left[i\right]}$
+                                            \EndFor                             
+                                            \label{cwwSortMergePos after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.2cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{cwwSortMergePos input}
+                            \begin{align*}
+                                array1 & = \begin{bmatrix}3\end{bmatrix} \\
+                                array2 & = \begin{bmatrix}5\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $quadruplesMerged$ \cref{cwwSortMergePos before quadruplesMerged}
+                            \begin{align*}
+                                quadruples1 & = \begin{bmatrix}\left<3, 1, 1, 0\right>\end{bmatrix} \\
+                                quadruples2 & = \begin{bmatrix}\left<5, 1, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item After $quadruplesMerged$ \cref{cwwSortMergePos after quadruplesMerged}
+                            \begin{align*}
+                                quadruplesMerged = \begin{bmatrix}\left<3, 1, 1, 0\right> \ \left<5, 1, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item From $inverses$ \cref{cwwSortMergePos after inverses}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $offsets$ \cref{cwwSortMergePos before offsets}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item After $offsets$ \cref{cwwSortMergePos after offsets}
+                            \begin{align*}
+                                offsets = \begin{bmatrix}0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item After $result$ \cref{cwwSortMergePos after result}
+                            \begin{align*}
+                                result = \begin{bmatrix}3 & 5\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.2cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array
+                                        \Statex
+                        
+                                        \Function{cwwSortRecursive}{$array$}
+                                            \label{cwwSortRecursive input}
+                                            \If{$array.size \leq 1$}
+                                                \label{cwwSortRecursive base case}
+                                                \State $result \gets array$
+                                                \State \Return $result$
+                                            \EndIf
+        
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{array.size}{2}$}
+                                                \State $left{\left[i\right]} \gets array{\left[i\right]}$
+                                            \EndFor
+        
+                                            \State $right \gets\left[\ \right]$
+                                            \For{$j = \frac{array.size}{2}$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $right{\left[j\right]} \gets array{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{cwwSortRecursive before leftsorted}
+                                            \State $leftSorted \gets \Call{cwwSortRecursive}{left}$
+                                            \label{cwwSortRecursive after leftsorted}
+                                            
+                                            \label{cwwSortRecursive before rightsorted}
+                                            \State $rightSorted \gets \Call{cwwSortRecursive}{right}$
+                                            \label{cwwSortRecursive after rightsorted}
+
+                                            \label{cwwSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergePos}{leftSorted, rightSorted}$
+                                            \label{cwwSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.1cm}
+                    \tiny
+                    \noindent \scalebox{0.95}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begin{multicols}{3}
+                                \begin{itemize}
+                                    \item After $result$ \cref{cwwSortMergePos after result}
+                                    \begin{align*}
+                                        result = \begin{bmatrix}3 & 5\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item After $leftSorted$ \cref{cwwSortRecursive after leftsorted}
+                                    \begin{align*}
+                                        leftSorted = \begin{bmatrix}3 & 5\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $rightSorted$ \cref{cwwSortRecursive before rightsorted}
+                                    \begin{align*}
+                                        right = \begin{bmatrix}0 & 8\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortRecursive}
+        
+                                    \item Input \cref{cwwSortMergePos input}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}0 & 8\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $leftSorted$ \cref{cwwSortRecursive before leftsorted}
+                                    \begin{align*}
+                                        left = \begin{bmatrix}0\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortRecursive}
+        
+                                    \item Base case \cref{cwwSortRecursive base case}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}0\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+        
+                                    \item After $leftSorted$ \cref{cwwSortRecursive after leftsorted}
+                                    \begin{align*}
+                                        leftsorted = \begin{bmatrix}0\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $rightSorted$ \cref{cwwSortRecursive before rightsorted}
+                                    \begin{align*}
+                                        irght = \begin{bmatrix}8\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortRecursive}
+        
+                                    \item Base case \cref{cwwSortRecursive base case}
+                                    \begin{align*}
+                                        array = \begin{bmatrix}8\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+        
+                                    \item After $rightSorted$ \cref{cwwSortRecursive after rightsorted}
+                                    \begin{align*}
+                                        rightSorted = \begin{bmatrix}8\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $result$ \cref{cwwSortRecursive before result}
+                                    \begin{align*}
+                                        leftSorted & = \begin{bmatrix}0\end{bmatrix} \\
+                                        rightSorted & = \begin{bmatrix}8\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{cwwSortMergePos}
+                                \end{itemize}
+                            \end{multicols}
+                        \end{minipage}
+                    }
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO cww\_sort\_mergepos
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.7}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_mergepos Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array1$: the first array that needs to be merged
+                                            \Statex $array2$: the second array that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array
+                                        \Statex
+                        
+                                        \Function{cwwSortMergePos}{$array1, array2$}
+                                            \label{cwwSortMergePos input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $array1.size$}
+                                                \State $quadruples1 \gets \left<array1{\left[i\right]}, 0, \texttt{fromA1}, 0\right>$
+                                            \EndFor
+            
+                                            \State $quadruples2 \gets \left[\ \right]$
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $array2.size$}
+                                                \State $quadruples2{\left[j\right]} \gets \left<array2{\left[j\right]} - j, 1, \texttt{fromA2}, j\right>$
+                                            \EndFor
+
+                                            \label{cwwSortMergePos before quadruplesMerged}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{cwwSortMergePos after quadruplesMerged}
+            
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromArray, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromArray$
+                                            \EndFor
+                                            \label{cwwSortMergePos after inverses}
+
+                                            \label{cwwSortMergePos before offsets}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{cwwSortMergePos after offsets}
+            
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<position, \_, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $result{\left[i\right]} \gets position + offsets{\left[i\right]}$
+                                            \EndFor                             
+                                            \label{cwwSortMergePos after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.2cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{cwwSortMergePos input}
+                            \begin{align*}
+                                array1 & = \begin{bmatrix}0\end{bmatrix} \\
+                                array2 & = \begin{bmatrix}8\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $quadruplesMerged$ \cref{cwwSortMergePos before quadruplesMerged}
+                            \begin{align*}
+                                quadruples1 & = \begin{bmatrix}\left<0, 1, 1, 0\right>\end{bmatrix} \\
+                                quadruples2 & = \begin{bmatrix}\left<8, 1, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item After $quadruplesMerged$ \cref{cwwSortMergePos after quadruplesMerged}
+                            \begin{align*}
+                                quadruplesMerged = \begin{bmatrix}\left<0, 1, 1, 0\right> \ \left<8, 1, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item From $inverses$ \cref{cwwSortMergePos after inverses}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $offsets$ \cref{cwwSortMergePos before offsets}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item After $offsets$ \cref{cwwSortMergePos after offsets}
+                            \begin{align*}
+                                offsets = \begin{bmatrix}0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item After $result$ \cref{cwwSortMergePos after result}
+                            \begin{align*}
+                                result = \begin{bmatrix}0 & 8\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.25cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array
+                                        \Statex
+                        
+                                        \Function{cwwSortRecursive}{$array$}
+                                            \label{cwwSortRecursive input}
+                                            \If{$array.size \leq 1$}
+                                                \label{cwwSortRecursive base case}
+                                                \State $result \gets array$
+                                                \State \Return $result$
+                                            \EndIf
+        
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{array.size}{2}$}
+                                                \State $left{\left[i\right]} \gets array{\left[i\right]}$
+                                            \EndFor
+        
+                                            \State $right \gets\left[\ \right]$
+                                            \For{$j = \frac{array.size}{2}$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $right{\left[j\right]} \gets array{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{cwwSortRecursive before leftsorted}
+                                            \State $leftSorted \gets \Call{cwwSortRecursive}{left}$
+                                            \label{cwwSortRecursive after leftsorted}
+                                            
+                                            \label{cwwSortRecursive before rightsorted}
+                                            \State $rightSorted \gets \Call{cwwSortRecursive}{right}$
+                                            \label{cwwSortRecursive after rightsorted}
+
+                                            \label{cwwSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergePos}{leftSorted, rightSorted}$
+                                            \label{cwwSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.4cm}
+                    \scriptsize
+                    % \begin{multicols}{2}
+                        \begin{itemize}
+                            \item After $result$ \cref{cwwSortMergePos after result}
+                            \begin{align*}
+                                result = \begin{bmatrix}0 & 8\end{bmatrix}
+                            \end{align*}
+
+                            \item After $rightSorted$ \cref{cwwSortRecursive after rightsorted}
+                            \begin{align*}
+                                rightSorted = \begin{bmatrix}0 & 8\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $result$ \cref{cwwSortRecursive before result}
+                            \begin{align*}
+                                leftSorted & = \begin{bmatrix}3 & 5\end{bmatrix} \\
+                                rightSorted & = \begin{bmatrix}0 & 8\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{cwwSortMergePos}
+                        \end{itemize}
+                    % \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO cww\_sort\_mergepos
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.7}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_mergepos Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array1$: the first array that needs to be merged
+                                            \Statex $array2$: the second array that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array
+                                        \Statex
+                        
+                                        \Function{cwwSortMergePos}{$array1, array2$}
+                                            \label{cwwSortMergePos input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $array1.size$}
+                                                \State $quadruples1 \gets \left<array1{\left[i\right]}, 0, \texttt{fromA1}, 0\right>$
+                                            \EndFor
+            
+                                            \State $quadruples2 \gets \left[\ \right]$
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $array2.size$}
+                                                \State $quadruples2{\left[j\right]} \gets \left<array2{\left[j\right]} - j, 1, \texttt{fromA2}, j\right>$
+                                            \EndFor
+
+                                            \label{cwwSortMergePos before quadruplesMerged}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{cwwSortMergePos after quadruplesMerged}
+            
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromArray, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromArray$
+                                            \EndFor
+                                            \label{cwwSortMergePos after inverses}
+
+                                            \label{cwwSortMergePos before offsets}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{cwwSortMergePos after offsets}
+            
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<position, \_, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $result{\left[i\right]} \gets position + offsets{\left[i\right]}$
+                                            \EndFor                             
+                                            \label{cwwSortMergePos after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.2cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{cwwSortMergePos input}
+                            \begin{align*}
+                                array1 & = \begin{bmatrix}3 & 5\end{bmatrix} \\
+                                array2 & = \begin{bmatrix}0 & 8\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $quadruplesMerged$ \cref{cwwSortMergePos before quadruplesMerged}
+                            \begin{align*}
+                                quadruples1 & = \begin{bmatrix}\left<3, 1, 1, 0\right> & \left<5, 1, 1, 1\right>\end{bmatrix} \\
+                                quadruples2 & = \begin{bmatrix}\left<0, 1, 0, 0\right> & \left<7, 1, 0, 1\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item After $quadruplesMerged$ \cref{cwwSortMergePos after quadruplesMerged}
+                            \begin{align*}
+                                quadruplesMerged = & \left[\left<0, 1, 0, 0\right> \ \left<3, 1, 1, 0\right>\right. \\ 
+                                & \left.\left<5, 1, 1, 1\right> \ \left<7, 1, 0, 1\right>\right]
+                            \end{align*}
+
+                            \item From $inverses$ \cref{cwwSortMergePos after inverses}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}1 & 0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $offsets$ \cref{cwwSortMergePos before offsets}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}1 & 0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item After $offsets$ \cref{cwwSortMergePos after offsets}
+                            \begin{align*}
+                                offsets = \begin{bmatrix}0 & 1 & 1 & 1 & 2\end{bmatrix}
+                            \end{align*}
+
+                            \item After $result$ \cref{cwwSortMergePos after result}
+                            \begin{align*}
+                                result = \begin{bmatrix}0 & 4 & 6 & 8\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.25cm}
+            \begin{columns}[c]
+                \begin{column}{0.4\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array
+                                        \Statex
+                        
+                                        \Function{cwwSortRecursive}{$array$}
+                                            \label{cwwSortRecursive input}
+                                            \If{$array.size \leq 1$}
+                                                \label{cwwSortRecursive base case}
+                                                \State $result \gets array$
+                                                \State \Return $result$
+                                            \EndIf
+        
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{array.size}{2}$}
+                                                \State $left{\left[i\right]} \gets array{\left[i\right]}$
+                                            \EndFor
+        
+                                            \State $right \gets\left[\ \right]$
+                                            \For{$j = \frac{array.size}{2}$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $right{\left[j\right]} \gets array{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{cwwSortRecursive before leftsorted}
+                                            \State $leftSorted \gets \Call{cwwSortRecursive}{left}$
+                                            \label{cwwSortRecursive after leftsorted}
+                                            
+                                            \label{cwwSortRecursive before rightsorted}
+                                            \State $rightSorted \gets \Call{cwwSortRecursive}{right}$
+                                            \label{cwwSortRecursive after rightsorted}
+
+                                            \label{cwwSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergePos}{leftSorted, rightSorted}$
+                                            \label{cwwSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.6\textwidth}
+                    \vspace{-0.4cm}
+                    % \tiny
+                    % \begin{multicols}{3}
+                        \begin{itemize}
+                            \item After $result$ \cref{cwwSortMergePos after result}
+                            \begin{align*}
+                                result = \begin{bmatrix}0 & 4 & 6 & 8\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    % \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO cww\_merge\_after\_sort\_recursive Function
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.32cm}
+            \begin{columns}[c]
+                \begin{column}{0.45\textwidth}
+                    \noindent \scalebox{1}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_merge\_after\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $numberZero$: the number of $0$s in the constant-weight word
+                                            \Statex $onePositions$: the positions in which to insert $1$
+                                        \Ensure
+                                            \Statex $result$: the constant-weight word
+                                        \Statex
+                        
+                                        \Function{cwwMergeAfterSortRecursive}{$numberZero, onePositions$}
+                                            \State $zeroPositions \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $numberZero$}
+                                                \State $zeroPositions{\left[i\right]} \gets i$
+                                            \EndFor
+
+                                            \label{cwwMergeAfterSortRecursive before onePositionSorted}
+                                            \State $onePositionSorted \gets \Call{cwwSortRecursive}{onePositions}$
+                                            \label{cwwMergeAfterSortRecursive after onePositionSorted}
+
+                                            \label{cwwMergeAfterSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergebits}{zeroPositions, onePositionSorted}$
+                                            \label{cwwMergeAfterSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.55\textwidth}
+                    \begin{itemize}
+                        \item After $onePositionSorted$ \cref{cwwMergeAfterSortRecursive after onePositionSorted}
+                        \begin{align*}
+                            onePositionSorted = \begin{bmatrix}0 & 4 & 6 & 8\end{bmatrix}
+                        \end{align*}
+
+                        \item Before $result$ \cref{cwwMergeAfterSortRecursive before result}
+                        \begin{align*}
+                            zeroPositions & = \begin{bmatrix}0 & 1 & 2 & 3 & 4\end{bmatrix} \\
+                            onePositionSorted & = \begin{bmatrix}0 & 4 & 6 & 8\end{bmatrix}
+                        \end{align*}
+
+                        Call \textsc{cwwSortMergebits}
+                    \end{itemize}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO cww\_sort\_mergepos
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.25cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.75}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_sort\_mergebits Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $zeroPositions$: the positions of the $0$s
+                                            \Statex $onePositions$: the positions in which to insert $1$
+                                        \Ensure
+                                            \Statex $result$: the constant-weight word
+                                        \Statex
+                        
+                                        \Function{cwwSortMergebits}{$zeroPositions, onePositions$}
+                                            \label{cwwSortMergebits input}
+                                            \State $zeroQuadruples \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $zeroPositions.size$}
+                                                \State $zeroQuadruples{\left[i\right]} \gets \left<zeroPositions{\left[i\right]}, 0, 1, i\right>$
+                                            \EndFor
+            
+                                            \State $oneQuadruples \gets \left[\ \right]$
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $onePositions.size$}
+                                                \State $oneQuadruples{\left[j\right]} \gets \left<onePositions{\left[j\right]} - j, 1, 0, j\right>$
+                                            \EndFor
+
+                                            \label{cwwSortMergebits before quadruplesMerged}
+                                            \State $quadruplesMerged \gets \Call{merge}{zeroQuadruples, oneQuadruples}$
+                                            \label{cwwSortMergebits after quadruplesMerged}
+            
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, bit, \_, \_\right> \gets quadruplesMerged{\left[i\right>]}$
+                                                \State $result{\left[i\right]} \gets bit$
+                                            \EndFor
+                                            \label{cwwSortMergebits after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.2cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{cwwSortMergebits input}
+                            \begin{align*}
+                                zeroPositions & = \begin{bmatrix}0 & 1 & 2 & 3 & 4\end{bmatrix} \\
+                                onePositions & = \begin{bmatrix}0 & 4 & 6 & 8\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $quadruplesMerged$ \cref{cwwSortMergebits before quadruplesMerged}
+                            \begin{align*}
+                                zeroQuadruples = & \left[\left<0, 0, 1, 0\right> \ \left<1, 0, 1, 1\right>\right. \\ 
+                                & \left.\left<2, 0, 1, 2\right> \ \left<3, 0, 1, 3\right>\right. \\
+                                & \left.\left<4, 0, 1, 4\right>\right] \\
+                                oneQuadruples = & \left[\left<0, 1, 0, 0\right> \ \left<3, 1, 0, 1\right>\right. \\ 
+                                & \left.\left<4, 1, 0, 2\right> \ \left<5, 1, 0, 3\right>\right]
+                            \end{align*}
+
+                            \item After $quadruplesMerged$ \cref{cwwSortMergebits after quadruplesMerged}
+                            \begin{align*}
+                                & quadruplesMerged = \\
+                                & \left[\left<0, 1, 0, 0\right> \ \left<0, 0, 1, 0\right>\right. \\ 
+                                & \left.\left<1, 0, 1, 1\right> \ \left<2, 0, 1, 2\right>\right. \\
+                                & \left.\left<3, 1, 0, 1\right> \ \left<3, 0, 1, 3\right>\right. \\
+                                & \left.\left<4, 1, 0, 2\right> \ \left<4, 0, 1, 4\right>\right. \\
+                                & \left.\left<5, 1, 0, 3\right>\right]
+                            \end{align*}
+
+                            \item After $result$ \cref{cwwSortMergebits after result}
+                            \begin{align*}
+                                result = \left[1 \ 0 \ 0 \ 0 \ 1 \ 0 \ 1 \ 0 \ 1\right]
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO cww\_merge\_after\_sort\_recursive Function
+        \begin{frame}[containsverbatim]{\cwwalgortihmexampleframe}
+            \vspace{-0.32cm}
+            \begin{columns}[c]
+                \begin{column}{0.45\textwidth}
+                    \noindent \scalebox{1}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{cww\_merge\_after\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $numberZero$: the number of $0$s in the constant-weight word
+                                            \Statex $onePositions$: the positions in which to insert $1$
+                                        \Ensure
+                                            \Statex $result$: the constant-weight word
+                                        \Statex
+                        
+                                        \Function{cwwMergeAfterSortRecursive}{$numberZero, onePositions$}
+                                            \State $zeroPositions \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $numberZero$}
+                                                \State $zeroPositions{\left[i\right]} \gets i$
+                                            \EndFor
+
+                                            \label{cwwMergeAfterSortRecursive before onePositionSorted}
+                                            \State $onePositionSorted \gets \Call{cwwSortRecursive}{onePositions}$
+                                            \label{cwwMergeAfterSortRecursive after onePositionSorted}
+
+                                            \label{cwwMergeAfterSortRecursive before result}
+                                            \State $result \gets \Call{cwwSortMergebits}{zeroPositions, onePositionSorted}$
+                                            \label{cwwMergeAfterSortRecursive after result}
+                
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.55\textwidth}
+                    \begin{itemize}
+                        \item After $result$ \cref{cwwMergeAfterSortRecursive after result}
+                        \begin{align*}
+                            result = \begin{bmatrix}1 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1\end{bmatrix}
+                        \end{align*}
+                    \end{itemize}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+
+
+
+
+
+
+
+            
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Constant-Weight Word Conclusion subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{Constant-Weight Word Conclusion}
+        \begin{frame}{Comparison Between the two Algorithm}
+            The two algorithms have the same asymptotic complexity, $\mathcal{C}{\left(n, m\right)} = \mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2 + m \cdot \left(\log{\left(m\right)}\right)^3\right)}$. However, if we evaluate the complexity at the constants, we see that, \underline{focusing only on the distinct parts} of each algorithm's complexity, we have:
+            \begin{align*}
+                \begin{array}{rl}
+                    cww\_via\_insertionseries & 12 \cdot \left(n + m\right) + 21 \\
+                cww\_merge\_after\_sort\_recursive & 4 \cdot \left(n + m\right) + 10
+                \end{array}
+            \end{align*}
+
+            This comparison makes it clear that the modified \textsc{insertionSeries} approach offers better performance than the original, for the creation of a constant-weight word.
+        \end{frame}
+
+        \begin{frame}{Using Parallelisation}
+            The parallelisation technique can also be used in the construction of constant-weight words. However, we omit the details here, since the functions that benefit from parallelisation are the same as those used in the \textsc{insertionSeries} algorithm.
+        \end{frame}
+
+        \begin{frame}{Constant-Time}
+            This algorithm was also implemented using the constant-time approach.
+
+            \leavevmode
+
+            All data-dependent branches were eliminated and replaced with mux bitmasks for conditional selection. All comparison and swap operations are branchless.
+
+            This approach allows us to minimise the possibility of side-channel attacks, as there are no data-dependent branches.
+        \end{frame}

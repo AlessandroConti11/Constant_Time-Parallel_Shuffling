@@ -1,0 +1,47 @@
+\section{Introduction}
+    \begin{frame}{Specification}
+        Shuffling arrays in constant time is a common problem in modern cryptography. This project involves analysing the technique proposed by Daniel J. Bernstein in \url{https://cr.yp.to/2024/insertionseries-20240515.py}, and implementing it in C, possibly employing parallelization.
+    \end{frame}
+
+    \begin{frame}{Why Does It Matter?}
+        In many cryptographic applications, it is necessary to perform multiple insertions within an array or list
+        \begin{itemize}
+            \item construction of constant-weight words used in the McEliece cryptosystem;
+            \item insertion of a blockchain transaction in the mempool.
+        \end{itemize}
+
+        However, naive implementations is very slowly and may expose data to side-channel attacks. If memory access depends on data, the adversary may infer sensitive information.
+    \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Inserting Elements into an Array subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{Inserting Elements into an Array}
+        \begin{frame}{Inserting an Element into an Array}
+            To insert an element at a specific position in an array of size $n$, it is necessary:
+            \begin{itemize}
+                \item increase the size of the array if all positions are full, $\mathcal{C}{\left(n\right)} = \mathcal{O}{\left(n\right)}$;
+                \item move all elements to the right of the specified position by one position, $\mathcal{C}{\left(n\right)} = \mathcal{O}{\left(n\right)}$;
+                \item insert the new element at the desired, free position, $\mathcal{C}{\left(n\right)} = \mathcal{O}{\left(1\right)}$.
+            \end{itemize}
+    
+            \leavevmode
+    
+            This algorithm has the following computational cost
+            \begin{align*}
+                \mathcal{C}_{insert}{\left(n\right)} = \mathcal{O}{\left(n\right)} + \mathcal{O}{\left(n\right)} + \mathcal{O}{\left(1\right)} = \mathcal{O}{\left(n\right)}
+            \end{align*}
+        \end{frame}
+    
+        \begin{frame}{Inserting Multiple Elements into an Array}
+            To insert $m$ elements in specific positions in an array of size $n$, it is necessary to repeat for $m$ times the insertion of a single element.
+    
+            \leavevmode
+    
+            This algorithm has the following computational cost
+            \begin{align*}
+                \textcolor{blue}{\mathcal{C}_{multiple \ insertions}{\left(n, m\right)}} = m \cdot \mathcal{C}_{insert}{\left(n\right)} = \textcolor{blue}{\mathcal{O}{\left(m \cdot n\right)}}
+            \end{align*}
+
+            which is highly inefficient if most of the entries in an array are multiple entries and not single entries.
+        \end{frame}

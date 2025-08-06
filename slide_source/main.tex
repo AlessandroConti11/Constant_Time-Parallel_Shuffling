@@ -1,0 +1,137 @@
+% TODO
+
+
+
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{polimi}
+% Usage instructions can be found at: https://github.com/elauksap/beamerthemepolimi
+
+\usepackage[utf8]{inputenc}
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{cleveref}
+\usepackage{natbib}
+\usepackage[acronym]{glossaries}
+\usepackage{glossary-mcols}
+\usepackage{environ}
+\usepackage{etoolbox}
+\usepackage{multicol}
+\usepackage{minted}
+\usepackage{listings}
+\usepackage{nameref}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{multicol}
+\usepackage{lmodern}
+\usepackage[normalem]{ulem}
+\usepackage{nicefrac, xfrac}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{listings}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{caption}
+
+
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\matr}[1]{\mathrm{#1}}
+
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\hw}{HW}
+\DeclareMathOperator{\hd}{d_h}
+
+
+\let\oldcref\cref
+\renewcommand{\cref}[1]{(\oldcref{#1})}
+
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{5}
+
+\captionsetup{labelformat=empty}
+
+
+% \input{glossary}
+% \makeglossaries
+
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+
+\AtBeginSection[]{
+    \begin{frame}
+        \begin{columns}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={1-2}, currentsection, currentsubsection]
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={3}, currentsection, currentsubsection]
+            \end{column}
+        \end{columns}
+    \end{frame}
+}
+\AtBeginSubsection[]{
+    \begin{frame}
+        \begin{columns}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={1-2}, currentsection, currentsubsection]
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={3}, currentsection, currentsubsection]
+            \end{column}
+        \end{columns}
+    \end{frame}
+}
+
+\AtBeginSubsubsection[]{
+    \begin{frame}
+        \begin{columns}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={1-2}, currentsection, currentsubsection]
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={3}, currentsection, currentsubsection]
+            \end{column}
+        \end{columns}
+    \end{frame}
+}
+
+
+
+
+
+
+
+
+\title{\href{https://github.com/AlessandroConti11/Constant_Time-Parallel_Shuffling}{Constant Time, Parallel Shuffling}}
+\subtitle{\small 095947 - CRYPTOGRAPHY AND ARCHITECTURES FOR COMPUTER SECURITY}
+\author{Conti Alessandro}
+\date{}
+
+
+
+\begin{document}
+
+    \begin{frame}
+        \maketitle
+    \end{frame}
+    
+    \begin{frame}{Table of Contents}
+        \begin{columns}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={1-2}]
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \tableofcontents[sections={3}]
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \input{CTps/introduction}
+    \input{CTps/insertion_series}
+    \input{CTps/cww}
+    
+\end{document}

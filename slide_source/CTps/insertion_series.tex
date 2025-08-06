@@ -1,0 +1,1847 @@
+\section{Insertion Series}
+    \begin{frame}{Insertion Series Objective}
+        We will now analyse an algorithm that attempts to optimise serial insertion within an array. Trying to go from having a quadratic complexity to a quasi-linear one.
+
+        \leavevmode
+
+        We will analyse all the complexities of the auxiliary functions until we arrive at the actual complexity of the algorithm.
+    \end{frame}
+
+    \begin{frame}{Insertion Series Approach}
+        The algorithm shown below is based on the idea of the mergesort algorithm.
+
+        \begin{itemize}
+            \item Divide-et-Impera
+            \begin{itemize}
+                \item recursively sorts the array of $\left<position, element\right>$ to be inserted.
+            \end{itemize}
+
+            \item Sorted Merge
+            \begin{itemize}
+                \item performs a smart merge between the destination array and the insertion array.
+            \end{itemize}
+        \end{itemize}
+    \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% prefixsums subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{prefixsum}
+\newcounter{prefixsumfunctioncounter}
+\setcounter{prefixsumfunctioncounter}{1}
+\newcommand{\prefixsumfunctionframe}{%
+    \ifnum\value{prefixsumfunctioncounter}=1
+        \textsc{prefixSum} Function%
+    \else
+        \textsc{prefixSum} Function (\theprefixsumfunctioncounter)%
+    \fi
+    \stepcounter{prefixsumfunctioncounter}
+}
+        \begin{frame}[containsverbatim]{\prefixsumfunctionframe}
+            \begin{minted}[breaklines=true, linenos=true]{python}
+def prefixsums(L):
+    result = [0]
+    for b in L:
+        result += [result[-1] + b]
+    return result
+                \end{minted}
+        \end{frame}
+
+        \begin{frame}[containsverbatim]{\prefixsumfunctionframe}
+            % \vspace{-0.3cm}
+            \begingroup
+                \makeatletter
+                \renewcommand{\alglinenumber}[1]{\scriptsize#1}
+                \makeatother
+                \begin{algorithm}[H]
+                    \scriptsize
+                    \caption{prefixSum Function} \label{prefixSum function}
+                    \begin{algorithmic}[1]
+                        \Require 
+                            \Statex $array$: the array whose cumulative prefixes must be calculated
+                        \Ensure
+                            \Statex $result$: the cumulative prefixes of the array
+                        \Statex
+        
+                        \Function{prefixSum}{$array$}
+                            \State $result \gets \left[\ \right]$
+                            \State $sum \gets 0$
+        
+                            \For{$i = 0$ \textnormal{\textbf{to}} $array.size$}
+                                \State $result{\left[i\right]} \gets sum$
+                                \State $sum \gets sum + array{\left[i\right]}$
+                            \EndFor
+        
+                            \State \Return $result$
+                        \EndFunction
+                    \end{algorithmic}
+                \end{algorithm}
+            \endgroup
+        \end{frame}
+
+        \begin{frame}{\textsc{prefixSum} Example}
+            \begin{example}
+
+                Consider the following array:
+                \begin{align*}
+                    array = \begin{bmatrix}
+                        1 & 2 & 3 & 4
+                    \end{bmatrix}
+                \end{align*}
+
+                The prefixSum array is:
+                \begin{align*}
+                    result & = \begin{bmatrix}
+                        0 & 0 + 1 & \left(0 + 1\right) + 2 & \left(\left(0 + 1\right) + 2\right) + 3 & \left(\left(\left(0 + 1\right) + 2\right) + 3\right) + 4
+                    \end{bmatrix} = \\
+                    & = \begin{bmatrix}
+                        0 & 1 & 3 & 6 & 10
+                    \end{bmatrix}
+                \end{align*}
+            \end{example}
+        \end{frame}
+
+        \begin{frame}{\textsc{prefixSum} Cost}
+            Let $n \coloneqq array.size$.
+            \begin{align*}
+                \textcolor{blue}{\mathcal{C}{\left(n\right)}} = & \; \mathcal{C}_{intlist\_init}{\left(n + 1\right)} + \mathcal{C}_{intlist\_reserve}{\left(n + 1\right)} + \left(n + 1\right) \cdot \mathcal{C}_{intlist\_append}{\left(n + 1\right)} = \\
+                = & \; 1 + {\left(n + 1\right)} + \left(n + 1\right) \cdot 1 = \\
+                = & \; 2 \cdot n + 2 =  \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(n\right)}}
+                \\ \\
+                \textcolor{blue}{\mathcal{S}{\left(n\right)}} = & \; \mathcal{S}_{IntList}{\left(n + 1\right)} + \mathcal{S}_{int} = \\
+                = & \; \left(\left(n + 1\right) \cdot \SI{4}{B} + \SI{16}{B}\right) + \SI{4}{B} = \\
+                = & \; \SI{4}{B} \cdot n + \SI{24}{B} = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(n\right)}}
+            \end{align*}
+        \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%
+% merge subsection %
+%%%%%%%%%%%%%%%%%%%%
+    \subsection{merge}
+\newcounter{mergefunctioncounter}
+\setcounter{mergefunctioncounter}{1}
+\newcommand{\mergefunctionframe}{%
+    \ifnum\value{mergefunctioncounter}=1
+        \textsc{merge} Function%
+    \else
+        \textsc{merge} Function (\themergefunctioncounter)%
+    \fi
+    \stepcounter{mergefunctioncounter}
+}
+        \begin{frame}[containsverbatim]{\mergefunctionframe}
+            \begin{minted}[breaklines=true, linenos=true]{python}
+def merge(L, R):
+    return sorted(L + R)
+                \end{minted}
+        \end{frame}
+
+        \begin{frame}[containsverbatim]{\mergefunctionframe}
+            \vspace{-0.2cm}
+            \begingroup
+                \makeatletter
+                \renewcommand{\alglinenumber}[1]{\small#1}
+                \makeatother
+                \begin{algorithm}[H]
+                    \small
+                    \caption{merge Function} \label{merge function}
+                    \begin{algorithmic}[1]
+                        \Require 
+                            \Statex $array1$: the first array that needs to be merged
+                            \Statex $array2$: the second array that needs to be merged
+                        \Ensure
+                            \Statex $result$: the ordered union of the two input arrays
+                        \Statex
+        
+                        \Function{merge}{$array1, array2$}
+                            \State $merged \gets \left[\ \right]$
+                            \State $merged \gets \Call{concatenate}{array1, array2}$
+        
+                            \State $result \gets \Call{sort}{merged}$ 
+        
+                            \State \Return $result$
+                        \EndFunction
+                    \end{algorithmic}
+                \end{algorithm}
+            \endgroup
+        \end{frame}
+
+\newcounter{mergecostcounter}
+\setcounter{mergecostcounter}{1}
+\newcommand{\mergecostframe}{%
+    \ifnum\value{mergecostcounter}=1
+        \textsc{merge} Cost%
+    \else
+        \textsc{merge} Cost (\themergecostcounter)%
+    \fi
+    \stepcounter{mergecostcounter}
+}
+        \begin{frame}{\mergecostframe}
+            \begin{columns}[c]
+                \begin{column}{0.6\textwidth}
+                    % \footnotesize
+                    Let $n \coloneqq array1.size$ and $m \coloneqq array2.size$.
+                    \begin{align*}
+                        \textcolor{blue}{\mathcal{C}{\left(n, m\right)}} = & \; \mathcal{C}_{malloc}{\left(n + m\right)} + \mathcal{C}_{memcpy}{\left(n\right)} + \mathcal{C}_{memcpy}{\left(m\right)} + \\
+                        & + \mathcal{C}_{sort}{\left(n + m\right)} = \\
+                        = & \; 1 + n + m + \\
+                        & + \left(\frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2}\right) = \\
+                        = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n  + m\right)}\right)^2\right)}} \\
+                    \end{align*}
+                \end{column}
+
+                \begin{column}{0.35\textwidth}
+                    \small
+                    For the sorting algorithm, the \textbf{bitonic sorting} network algorithm was chosen, with adaptations to handle arrays whose sizes are not perfect squares.
+
+                    This choice is due to the fact that bitonic sort is an algorithm that can be easily parallelised and maintains a fixed sequence of comparisons and exchanges for the same array length. This makes the algorithm resistant to side channel attacks, as the control flow is independent of the data.
+                \end{column}
+            \end{columns}            
+        \end{frame}
+
+        \begin{frame}{\mergecostframe}
+            \begin{align*}
+                \textcolor{blue}{\mathcal{S}{\left(n, m\right)}} = & \; \mathcal{S}_{size\_t} + \mathcal{S}_{\text{*}Quadruple}{\left(n + m\right)} = \\
+                = & \; \SI{8}{B} + \left(n + m\right) \cdot \SI{16}{B} = \\
+                = & \; \SI{16}{B} \cdot \left(n + m\right) + \SI{8}{B} = \\
+                = & \: \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+            \end{align*}
+        \end{frame}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% insertionseries\_sort\_merge subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{insertionseries\_sort\_merge}
+\newcounter{insertionseriessortmergefunctioncounter}
+\setcounter{insertionseriessortmergefunctioncounter}{1}
+\newcommand{\insertionseriessortmergefunctionframe}{%
+    \ifnum\value{insertionseriessortmergefunctioncounter}=1
+        \textsc{insertionseries\_sort\_merge} Function%
+    \else
+        \textsc{insertionseries\_sort\_merge} Function (\theinsertionseriessortmergefunctioncounter)%
+    \fi
+    \stepcounter{insertionseriessortmergefunctioncounter}
+}
+        \begin{frame}[containsverbatim]{\insertionseriessortmergefunctionframe}
+            \begin{minted}[breaklines=true, linenos=true]{python} 
+def insertionseries_sort_merge(L, R):
+    L = [(x, 1, 0, y) for j, (x, y) in enumerate(L)]
+    R = [(x - j, 0, j, y) for j, (x, y) in enumerate(R)]
+    M = merge(L, R)
+    offsets = prefixsums(1 - fromL for _, fromL, _, _ in M)
+    return [(x + offset, y) for (x, _, _, y), offset in zip(M, offsets)]
+                \end{minted}
+        \end{frame}
+
+        \begin{frame}[containsverbatim]{\insertionseriessortmergefunctionframe}
+            % \vspace{-0.3cm}
+            \begingroup
+                \makeatletter
+                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                \makeatother
+                \begin{algorithm}[H]
+                    \tiny
+                    \caption{insertionseries\_sort\_merge Function} \label{insertionseries_sort_merge function}
+                    \begin{multicols}{2}
+                        \begin{algorithmic}[1]
+                            \Require 
+                                \Statex $tuples1$: the first array of tuples that needs to be merged
+                                \Statex $tuples2$: the second array of tuples that needs to be merged
+                            \Ensure
+                                \Statex $result$: the ordered union of the two input array of tuples
+                            \Statex
+            
+                            \Function{insertionseriesSortMerge}{$tuples1, tuples2$}
+                                \State $quadruples1 \gets \left[\ \right]$
+                                \State $quadruples2 \gets \left[\ \right]$
+            
+                                \For{$i = 0$ \textnormal{\textbf{to}} $tuples1.size$}
+                                    \State $\left<position, element\right> \gets tuples1{\left[i\right]}$
+                                    \State $quadruples1{\left[i\right]} \gets \left<position, element, \texttt{fromT1}, 0\right>$
+                                \EndFor
+            
+                                \For{$j = 0$ \textnormal{\textbf{to}} $tuples2.size$}
+                                    \State $\left<position, element\right> \gets tuples2{\left[j\right]}$
+                                    \State $quadruples2{\left[i\right]} \gets \left<position - j, element, \texttt{fromT2}, j\right>$
+                                \EndFor
+            
+                                \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+            
+                                \State $inverses \gets \left[\ \right]$
+                                \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                    \State $\left<\_, \_, fromTuple, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                    \State $inverses{\left[i\right]} \gets 1 - fromTuple$
+                                \EndFor
+                                
+                                \State $offsets \gets \Call{prefixSum}{inverses}$
+            
+                                \State $result \gets \left[\ \right]$
+                                \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                    \State $\left<key, value, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                    
+                                    \State $result{\left[i\right]} \gets \left<key + offsets{\left[i\right]}, value\right>$
+                                \EndFor
+                                
+                                \State \Return $result$
+                            \EndFunction
+                        \end{algorithmic}
+                    \end{multicols}
+                \end{algorithm}
+            \endgroup
+        \end{frame}
+
+\newcounter{insertionseriessortmergecostcounter}
+\setcounter{insertionseriessortmergecostcounter}{1}
+\newcommand{\insertionseriessortmergecostframe}{%
+    \ifnum\value{insertionseriessortmergecostcounter}=1
+        \textsc{insertionseries\_sort\_merge} Cost%
+    \else
+        \textsc{insertionseries\_sort\_merge} Cost (\theinsertionseriessortmergecostcounter)%
+    \fi
+    \stepcounter{insertionseriessortmergecostcounter}
+}
+        \begin{frame}{\insertionseriessortmergecostframe}
+            \scriptsize
+            Let $n \coloneqq tuples1.size$ and $m \coloneqq tuples2.size$.
+            \begin{align*}
+                \textcolor{blue}{\mathcal{C}{\left(n, m\right)}} = & \; \mathcal{C}_{malloc}{\left(n\right)} + \mathcal{C}_{malloc}{\left(m\right)} + n + m + \mathcal{C}_{merge}{\left(n, m\right)} + \mathcal{C}_{intlist\_init}{\left(n + m\right)} + \\
+                & + \mathcal{C}_{intlist\_reserve}{\left(n + m\right)} +\left(n + m\right) \cdot \mathcal{C}_{intlist\_append}{\left(n + m\right)} + \\
+                & + \mathcal{C}_{prefixSum}{\left(n + m\right)} + \mathcal{C}_{pairlist\_init}{\left(n + m\right)} + \mathcal{C}_{pairlist\_reserve}{\left(n + m\right)} + \\
+                & + \left(n + m\right) \cdot \mathcal{C}_{pairlist\_append}{\left(n + m\right)} + \mathcal{C}_{free}{\left(n\right)} + \mathcal{C}_{free}{\left(m\right)} + \mathcal{C}_{free}{\left(n + m\right)} + \\
+                & + \mathcal{C}_{intlist\_free}{\left(n + m\right)} + \mathcal{C}_{intlist\_free}{\left(n + m + 1\right)} = 
+                \\
+                = & \; 1 + 1 + n + m + \left(1 + n + m + \left(\frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2}\right)\right) + \\
+                & + 1 + \left(n + m\right) + \left(n + m\right) \cdot 1 + \left(2 \cdot \left(n + m\right) + 2\right) + 1 + \left(n + m\right) + \left(n + m\right) \cdot 1 + \\
+                & + 1 + 1 + 1 + 1 + 1 = \\
+                = & \; 8 \cdot \left(n + m\right) + \left(\frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2}\right) + 12 = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2\right)}}
+            \end{align*}
+        \end{frame}
+
+        \begin{frame}{\insertionseriessortmergecostframe}
+            \begin{align*}
+                \textcolor{blue}{\mathcal{S}{\left(n, m\right)}} = & \; 3 \cdot \mathcal{S}_{size\_t} + \mathcal{S}_{\text{*}Quadruple}{\left(n\right)} + \mathcal{S}_{\text{*}Quadruple}{\left(m\right)} + \mathcal{S}_{\text{*}Quadruple}{\left(n + m\right)} + \\
+                & + \mathcal{S}_{IntList}{\left(n + m\right)} + \mathcal{S}_{IntList}{\left(n + m + 1\right)} + \mathcal{S}_{PairList}{\left(n + m\right)} = \\
+                = & \; 3 \cdot \SI{8}{B} + n \cdot \SI{16}{B} + m \cdot \SI{16}{B} + \left(n + m\right) \cdot \SI{16}{B} + \\
+                & + \left(\left(n + m\right) \cdot \SI{4}{B} + \SI{16}{B}\right) + \left(\left(n + m + 1\right) \cdot \SI{4}{B} + \SI{16}{B}\right) + \\
+                & + \left(\left(n + m\right) \cdot \SI{8}{B} + \SI{16}{B}\right) = \\
+                = & \; \SI{48}{B} \cdot \left(n + m\right) + \SI{76}{B} = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+            \end{align*}
+        \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% insertionseries\_sort\_recursive subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{insertionseries\_sort\_recursive}
+\newcounter{insertionseriessortrecursivefunctioncounter}
+\setcounter{insertionseriessortrecursivefunctioncounter}{1}
+\newcommand{\insertionseriessortrecursivefunctionframe}{%
+    \ifnum\value{insertionseriessortrecursivefunctioncounter}=1
+        \textsc{insertionseries\_sort\_recursive} Function%
+    \else
+        \textsc{insertionseries\_sort\_recursive} Function (\theinsertionseriessortrecursivefunctioncounter)%
+    \fi
+    \stepcounter{insertionseriessortrecursivefunctioncounter}
+}
+        \begin{frame}[containsverbatim]{\insertionseriessortrecursivefunctionframe}
+            \begin{minted}[breaklines=true, linenos=true]{python}
+def insertionseries_sort_recursive(XY):
+    XY = list(XY)
+    t = len(XY)
+    if t <= 1: return XY
+    s = t // 2
+    L = insertionseries_sort_recursive(XY[:s])
+    R = insertionseries_sort_recursive(XY[s:])
+    return insertionseries_sort_merge(L, R)
+                \end{minted}
+        \end{frame}
+
+        \begin{frame}[containsverbatim]{\insertionseriessortrecursivefunctionframe}
+            % \vspace{-0.3cm}
+            \begingroup
+                \makeatletter
+                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                \makeatother
+                \begin{algorithm}[H]
+                    \tiny
+                    \caption{insertionseries\_sort\_recursive Function} \label{insertionseries_sort_recursive function}
+                    \begin{multicols}{2}
+                        \begin{algorithmic}[1]
+                            \Require 
+                                \Statex $tuples$: the array of tuples to be sort
+                            \Ensure
+                                \Statex $result$: the sorted array of tuples
+                            \Statex
+            
+                            \Function{insertionseriesSortRecursive}{$tuples$}
+                                \If{$tuples.size \leq 1$}
+                                    \State $result \gets tuples$
+                                    \State \Return $result$
+                                \EndIf
+        
+                                \State $left \gets \left[\ \right]$
+                                \For{$i = 0$ \textnormal{\textbf{to}} $\frac{tuples.size}{2}$}
+                                    \State $left{\left[i\right]} \gets tuples{\left[i\right]}$
+                                \EndFor
+                                \State $right \gets \left[\ \right]$
+                                \For{$j = \frac{tuples.size}{2}$ \textnormal{\textbf{to}} $tuples.size$}
+                                    \State $right{\left[j\right]} \gets tuples{\left[j\right]}$
+                                \EndFor
+        
+                                \State $leftSorted \gets \Call{insertionseriesSortRecursive}{left}$
+                                \State $rightSorted \gets \Call{insertionseriesSortRecursive}{right}$
+                                \State $result \gets \Call{insertionseriesSortMerge}{leftSorted, rightSorted}$
+        
+                                \State \Return $result$
+                            \EndFunction
+                        \end{algorithmic}
+                    \end{multicols}
+                \end{algorithm}
+            \endgroup
+        \end{frame}
+
+\newcounter{insertionseriessortrecursivecostcounter}
+\setcounter{insertionseriessortrecursivecostcounter}{1}
+\newcommand{\insertionseriessortrecursivecostframe}{%
+    \ifnum\value{insertionseriessortrecursivecostcounter}=1
+        \textsc{insertionseries\_sort\_recursive} Cost%
+    \else
+        \textsc{insertionseries\_sort\_recursive} Cost (\theinsertionseriessortrecursivecostcounter)%
+    \fi
+    \stepcounter{insertionseriessortrecursivecostcounter}
+}
+        \begin{frame}{\insertionseriessortrecursivecostframe}
+            \begin{columns}[c]
+                \begin{column}{0.7\textwidth}
+                    \footnotesize
+                    Let $m \coloneqq tuples.size$.
+                    \begin{align*}
+                        \mathcal{C}{\left(m\right)} = & \; \begin{cases}
+                            \mathcal{C}_{pairlist\_copy}{\left(m\right)} & m \leq 1 \\
+                            2 \cdot \left(\mathcal{C}_{pairlist\_init}{\left(\frac{m}{2}\right)} + \mathcal{C}_{pairlist\_reserve}{\left(\frac{m}{2}\right)}\right) + \\
+                            \quad + m \cdot \mathcal{C}_{pairlist\_append}{\left(\frac{m}{2}\right)} + 2 \cdot \mathcal{C}{\left(\frac{m}{2}\right)} + \\
+                            \quad + \mathcal{C}_{insertionseries\_sort\_merge}{\left(\frac{m}{2}, \frac{m}{2}\right)} + \\
+                            \quad + 4 \cdot \mathcal{C}_{pairlist\_free}{\left(\frac{m}{2}\right)} & m > 1
+                        \end{cases}
+                        \\
+                        = & \; \begin{cases}
+                            m & m \leq 1 \\
+                            2 \cdot \left(1 + \frac{m}{2}\right) + m \cdot 1 + 2 \cdot \mathcal{C}{\left(\frac{m}{2}\right)} + \\
+                            \quad + \mathcal{O}{\left(\left(\frac{m}{2} + \frac{m}{2}\right) \cdot \left(\log{\left(\frac{m}{2} + \frac{m}{2}\right)}\right)^2 \right)} + 4 \cdot 1 & m > 1
+                        \end{cases}
+                        \\
+                        = & \; \begin{cases}
+                            1 & m \leq 1 \\
+                            2 \cdot \mathcal{C}{\left(\frac{m}{2}\right)} + 2 \cdot m + 6 + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^2\right)} & m > 1
+                        \end{cases}
+                    \end{align*}
+                \end{column}
+
+                \begin{column}{0.25\textwidth}
+                    What is currently shown is the time complexity of an iteration; to find the total complexity, the \textit{master theorem} must be applied.
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+        \begin{frame}{\insertionseriessortrecursivecostframe}
+            \begin{align*}
+                \textcolor{blue}{\mathcal{C}{\left(m\right)}} = & \; 2 \cdot \mathcal{C}{\left(\frac{m}{2}\right)} + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^2\right)} = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)}}
+            \end{align*}
+        \end{frame}
+
+        \begin{frame}{\insertionseriessortrecursivecostframe}
+            \begin{columns}[c]
+                \begin{column}{0.48\textwidth}
+                    \tiny
+                    \begin{align*}
+                        \mathcal{S}_{iteration}{\left(m\right)} = & \; \begin{cases}
+                            \mathcal{S}_{PairList}{\left(m\right)} & m \leq 1 \\
+                            2 \cdot \mathcal{S}_{size\_t} + 4 \cdot \mathcal{S}_{PairList}{\left(\frac{m}{2}\right)} + \mathcal{S}_{PairList}{\left(m\right)} & m > 1
+                        \end{cases} \\
+                        = & \; \begin{cases}
+                            \SI{8}{B} \cdot m + \SI{16}{B} & m \leq 1 \\
+                            2 \cdot \SI{8}{B} + 4 \cdot \left(\SI{8}{B} \cdot \frac{m}{2} + \SI{16}{B}\right) + \left(\SI{8}{B} \cdot m + \SI{16}{B}\right) & m > 1
+                        \end{cases}  \\
+                        = & \; \begin{cases}
+                            \SI{24}{B} & m \leq 1 \\
+                            \SI{24}{B} \cdot m + \SI{96}{B} & m > 1
+                        \end{cases}
+                    \end{align*}
+                \end{column}
+
+                \begin{column}{0.48\textwidth}
+                    \footnotesize
+                    \begin{align*}
+                        \textcolor{blue}{\mathcal{S}{\left(m\right)}} = & \; \sum_{i = 0}^{\log{m}}{\mathcal{S}_{iteration}{\left(\frac{m}{2^i}\right)}} = \\
+                        = & \; \SI{24}{B} \cdot m \cdot \sum_{i = 0}^{\log{m}}{\frac{1}{2^i}} + \SI{96}{B} \cdot \sum_{i = 0}^{\log{m}}{1} = \\
+                        < & \; \SI{24}{B} \cdot m \cdot \left(2 - \frac{1}{m}\right) + \SI{96}{B} \cdot \left(\log{m} + 1\right) = \\
+                        = & \; \SI{48}{B} \cdot m + \SI{96}{B} \cdot \log{\left(m\right)} + \SI{72}{B} \\
+                        = & \; \textcolor{blue}{\mathcal{O}{\left(m\right)}}
+                    \end{align*}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% insertionseries\_merge\_after\_sort\_recursive subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{insertionseries\_merge\_after\_sort\_recursive}
+\newcounter{insertionseriesmergeaftersortrecursivefunctioncounter}
+\setcounter{insertionseriesmergeaftersortrecursivefunctioncounter}{1}
+\newcommand{\insertionseriesmergeaftersortrecursivefunctionframe}{%
+    \ifnum\value{insertionseriesmergeaftersortrecursivefunctioncounter}=1
+        \textsc{insertionseries\_merge\_after\_sort\_recursive} Function%
+    \else
+        \textsc{insertionseries\_merge\_after\_sort\_recursive} Function (\theinsertionseriesmergeaftersortrecursivefunctioncounter)%
+    \fi
+    \stepcounter{insertionseriesmergeaftersortrecursivefunctioncounter}
+}
+        \begin{frame}[containsverbatim]{\insertionseriesmergeaftersortrecursivefunctionframe}
+            \begin{minted}[breaklines=true, linenos=true]{python}
+def insertionseries_merge_after_sort_recursive(L, XY):
+    L = list(enumerate(L))
+    R = insertionseries_sort_recursive(XY)
+    return [y for x, y in insertionseries_sort_merge(L, R)]
+                \end{minted}
+        \end{frame}
+
+        \begin{frame}[containsverbatim]{\insertionseriesmergeaftersortrecursivefunctionframe}
+            \begingroup
+                \makeatletter
+                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                \makeatother
+                \begin{algorithm}[H]
+                    \tiny
+                    \caption{insertionseries\_merge\_after\_sort\_recursive Function} \label{insertionseries_merge_after_sort_recursive function}
+                    \begin{algorithmic}[1]
+                        \Require 
+                            \Statex $array$: the array in which new elements will be added
+                            \Statex $tuples$: the array of positions and elements to be added
+                        \Ensure
+                            \Statex $result$: the array containing the old elements and the new ones inserted in the specified positions
+                        \Statex
+        
+                        \Function{insertionseriesMergeAfterSortRecursive}{$array, tuples$}
+                            \State $arrayTuple \gets \left[\ \right]$
+                            \For{$i = 0$ \textnormal{\textbf{to}} $array.size$}
+                                \State $arrayTuple \gets \left<i, array{\left[i\right]}\right>$
+                            \EndFor
+        
+                            \State $tuplesSorted \gets \Call{insertionseriesSortRecursive}{tuples}$
+                            \State $mergedTuples \gets \Call{insertionseriesSortMerge}{arrayTuple, tuplesSorted}$
+        
+                            \State $result \gets \left[\ \right]$
+                            \For{$i = 0$ \textnormal{\textbf{to}} $mergedTuples.size$}
+                                \State $\left<\_, value\right> \gets mergedTuples{\left[i\right]}$
+                                \State $result{\left[i\right]} \gets value$
+                            \EndFor
+        
+                            \State \Return $result$
+                        \EndFunction
+                    \end{algorithmic}
+                \end{algorithm}
+            \endgroup
+        \end{frame}
+
+\newcounter{insertionseriesmergeaftersortrecursivecostcounter}
+\setcounter{insertionseriesmergeaftersortrecursivecostcounter}{1}
+\newcommand{\insertionseriesmergeaftersortrecursivecostframe}{%
+    \ifnum\value{insertionseriesmergeaftersortrecursivecostcounter}=1
+        \textsc{insertionseries\_merge\_after\_sort\_recursive} Cost%
+    \else
+        \textsc{insertionseries\_merge\_after\_sort\_recursive} Cost (\theinsertionseriesmergeaftersortrecursivecostcounter)%
+    \fi
+    \stepcounter{insertionseriesmergeaftersortrecursivecostcounter}
+}
+        \begin{frame}{\insertionseriesmergeaftersortrecursivecostframe}
+            \scriptsize
+            Let $n \coloneqq array.size$ and $m \coloneqq tuples.size$.
+            \begin{align*}
+                \textcolor{blue}{\mathcal{C}{\left(n, m\right)}} = & \; \mathcal{C}_{pairlist\_init}{\left(n\right)} + \mathcal{C}_{pairlist\_reserve}{\left(n\right)} + n \cdot \mathcal{C}_{pairlist\_append}{\left(n\right)} + \\
+                & + \mathcal{C}_{insertionseries\_sort\_recursive}{\left(m\right)} + \mathcal{C}_{insertionseries\_sort\_merge}{\left(n, m\right)} + \\
+                & + \mathcal{C}_{intlist\_init}{\left(n + m\right)} + \mathcal{C}_{intlist\_reserve}{\left(n + m\right)} + \left(n + m\right) \cdot \mathcal{C}_{intlist\_append}{\left(m\right)} + \\
+                & + \mathcal{C}_{pairlist\_free}{\left(n\right)} + \mathcal{C}_{pairlist\_free}{\left(m\right)} + \mathcal{C}_{pairlist\_free}{\left(n + m\right)} = \\
+                = & \; 1 + n + n \cdot 1 + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)} + \\
+                & + \left(8 \cdot \left(n + m\right) + \left(\frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2}\right) + 12\right) + \\
+                & + 1 + \left(n + m\right) + \left(n + m\right) \cdot 1 + 1 + 1 + 1 = \\
+                = & \; 2 \cdot n + 10 \cdot \left(n + m\right) + \frac{n + m}{2} \cdot \log{\left(n + m\right)} \cdot \frac{\log{\left(n + m\right)} + 1}{2} + \\
+                & + \mathcal{O}{\left(m \cdot \left(\log{\left(m\right)}\right)^3\right)} + 17 = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2 + m \cdot \left(\log{\left(m\right)}\right)^3\right)}}
+            \end{align*}
+        \end{frame}
+
+        \begin{frame}{\insertionseriesmergeaftersortrecursivecostframe}
+            \begin{align*}
+                \textcolor{blue}{\mathcal{S}{\left(n, m\right)}} = & \; \mathcal{S}_{Pairlist}{\left(n\right)} + \mathcal{S}_{Pairlist}{\left(m\right)} + \mathcal{S}_{Pairlist}{\left(n + m\right)} + \mathcal{S}_{IntList}{\left(n + m\right)} = \\
+                = & \; \left(n \cdot \SI{8}{B} + \SI{16}{B}\right) + \left(m \cdot \SI{8}{B} + \SI{16}{B}\right) + \\
+                & + \left(\left(n + m\right) \cdot \SI{8}{B} + \SI{16}{B}\right) + \left(\left(n + m\right) \cdot \SI{4}{B} + \SI{16}{B}\right) = \\
+                = & \; \SI{20}{B} \cdot \left(n + m\right) + \SI{64}{B} = \\
+                = & \; \textcolor{blue}{\mathcal{O}{\left(n + m\right)}}
+            \end{align*}
+        \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Insertion Series Example %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{Insertion Series Example}
+\newcounter{insertionseriesexamplecounter}
+\setcounter{insertionseriesexamplecounter}{1}
+\newcommand{\insertionseriesexampleframe}{%
+    \ifnum\value{insertionseriesexamplecounter}=1
+        Insertion Series Example%
+    \else
+        Insertion Series Example (\theinsertionseriesexamplecounter)%
+    \fi
+    \stepcounter{insertionseriesexamplecounter}
+}
+        \begin{frame}{\insertionseriesexampleframe}
+            Now let's look at an example that shows how the algorithm works.
+
+            \begin{itemize}
+                \item Consider the following array to which the elements will be added:
+                \begin{equation*}
+                    array \coloneqq \begin{bmatrix}
+                        1 & 2 & 3 & 4 & 5
+                    \end{bmatrix}
+                \end{equation*}
+                
+                \item Consider the following array of $\left<position, element\right>$ pairs that we are going to insert:
+                \begin{equation*}
+                    tuples \coloneqq \begin{bmatrix}
+                        \left<3, D\right> & \left<5, F\right> & \left<0, A\right> & \left<8, I\right>
+                    \end{bmatrix}
+                \end{equation*}
+                The elements are represented as letters to make it easier to follow the algorithm.
+            \end{itemize}
+        \end{frame}
+
+% TODO insertionseries\_merge\_after\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.45\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_merge\_after\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array in which new elements will be added
+                                            \Statex $tuples$: the array of positions and elements to be added
+                                        \Ensure
+                                            \Statex $result$: the array containing the old elements and the new ones inserted in the specified positions
+                                        \Statex
+                        
+                                        \Function{insertionseriesMergeAfterSortRecursive}{$array, tuples$}
+                                            \State $arrayTuple \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $arrayTuple \gets \left<i, array{\left[i\right]}\right>$
+                                            \EndFor 
+                                            
+                                            \label{insertionseriesMergeAfterSortRecursive before insertionseriesSortRecursive}
+                                            \State $tuplesSorted \gets \Call{insertionseriesSortRecursive}{tuples}$
+                                            \State $mergedTuples \gets \Call{insertionseriesSortMerge}{arrayTuple, tuplesSorted}$
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $mergedTuples.size$}
+                                                \State $\left<\_, value\right> \gets mergedTuples{\left[i\right]}$
+                                                \State $result{\left[i\right]} \gets value$
+                                            \EndFor
+                        
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.55\textwidth}
+                    \begin{itemize}
+                        \item Before $tuplesSorted$ \cref{insertionseriesMergeAfterSortRecursive before insertionseriesSortRecursive}
+                        \begin{align*}
+                            array & = \begin{bmatrix}1 & 2 & 3 & 4 & 5\end{bmatrix} \\
+                            tuples & = \begin{bmatrix}\left<3, D\right> & \left<5, F\right> & \left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                        \end{align*}
+                    \end{itemize}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.4\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples$: the array of tuples to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortRecursive}{$tuples$}
+                                            \label{insertionseriesSortRecursive input}
+                                            \If{$tuples.size \leq 1$}
+                                                \label{insertionseriesSortRecursive base case}
+                                                \State $result \gets tuples$
+                                                \State \Return $result$
+                                            \EndIf
+                    
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{tuples.size}{2}$}
+                                                \State $left{\left[i\right]} \gets tuples{\left[i\right]}$
+                                            \EndFor 
+                                            \State $right \gets \left[\ \right]$
+                                            \For{$j = \frac{tuples.size}{2}$ \textnormal{\textbf{to}} $tuples.size$}
+                                                \State $right{\left[j\right]} \gets tuples{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{insertionseriesSortRecursive before leftSorted}
+                                            \State $leftSorted \gets \Call{insertionseriesSortRecursive}{left}$
+                                            \label{insertionseriesSortRecursive after leftsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before rightSorted}
+                                            \State $rightSorted \gets \Call{insertionseriesSortRecursive}{right}$
+                                            \label{insertionseriesSortRecursive after rightsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                                            \State $result \gets \Call{insertionseriesSortMerge}{leftSorted, rightSorted}$
+                                            \label{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                    
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.6\textwidth}
+                    \vspace{-0.2cm}
+                    \tiny
+                    \noindent \scalebox{0.9}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begin{multicols}{3}
+                                \begin{itemize}
+                                    \item Input \cref{insertionseriesSortRecursive input}
+                                    \begin{align*}
+                                        tuples = & \left[\left<3, D\right> \ \left<5, F\right>\right. \\ 
+                                        & \left.\left<0, A\right> \ \left<8, I\right>\right]
+                                    \end{align*}
+                                    
+                                    \item Before $leftSorted$ \cref{insertionseriesSortRecursive before leftSorted}
+                                    \begin{align*}
+                                        left = \begin{bmatrix}\left<3, D\right> & \left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortRecursive}
+            
+                                    \item Input \cref{insertionseriesSortRecursive input}
+                                    \begin{align*}
+                                        tuples = \begin{bmatrix}\left<3, D\right> & \left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+            
+                                    \item Before $leftSorted$ \cref{insertionseriesSortRecursive before leftSorted}
+                                    \begin{align*}
+                                        left = \begin{bmatrix}\left<3, D\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortRecursive}
+            
+                                    \item Base case \cref{insertionseriesSortRecursive base case}
+                                    \begin{align*}
+                                        tuples = \begin{bmatrix}\left<3, D\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+            
+                                    \item After $leftSorted$ \cref{insertionseriesSortRecursive after leftsorted}
+                                    \begin{align*}
+                                        leftSorted = \begin{bmatrix}\left<3, D\right>\end{bmatrix}
+                                    \end{align*}
+            
+                                    \item Before $rightSorted$ \cref{insertionseriesSortRecursive before rightSorted}
+                                    \begin{align*}
+                                        right = \begin{bmatrix}\left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortRecursive}
+            
+                                    \item Base case \cref{insertionseriesSortRecursive base case}
+                                    \begin{align*}
+                                        tuples = \begin{bmatrix}\left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+            
+                                    \item After $rightSorted$ \cref{insertionseriesSortRecursive after rightsorted}
+                                    \begin{align*}
+                                        rightSorted = \begin{bmatrix}\left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+            
+                                    \item Before $result$ \cref{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                                    \begin{align*}
+                                        leftSorted & = \begin{bmatrix}\left<3, D\right>\end{bmatrix} \\
+                                        rightSorted & = \begin{bmatrix}\left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortMerge}
+                                \end{itemize}
+                            \end{multicols}
+                        \end{minipage}
+                    }
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_merge
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.2cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.58}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_merge Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples1$: the first array of tuples that needs to be merged
+                                            \Statex $tuples2$: the second array of tuples that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortMerge}{$tuples1, tuples2$}
+                                            \label{insertionseriesSortMerge input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \State $quadruples2 \gets \left[\ \right]$
+                        
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $tuples1.size$}
+                                                \State $\left<position, element\right> \gets tuples1{\left[i\right]}$
+                                                \State $quadruples1{\left[i\right]} \gets \left<position, element, \texttt{fromT1}, 0\right>$
+                                            \EndFor
+                        
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $tuples2.size$}
+                                                \State $\left<position, element\right> \gets tuples2{\left[j\right]}$
+                                                \State $quadruples2{\left[i\right]} \gets \left<position - j, element, \texttt{fromT2}, j\right>$
+                                            \EndFor
+                                            
+                                            \label{insertionseriesSortMerge before merge}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{insertionseriesSortMerge after merge}
+                        
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromTuple, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromTuple$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after inverses}
+
+                                            \label{insertionseriesSortMerge before prefixSum}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{insertionseriesSortMerge after prefixSum}
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<key, value, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                
+                                                \State $result{\left[i\right]} \gets \left<key + offsets{\left[i\right]}, value\right>$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after fix}
+                                            
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.2cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{insertionseriesSortMerge input}
+                            \begin{align*}
+                                tuples1 & = \begin{bmatrix}\left<3, D\right>\end{bmatrix} \\
+                                tuples2 & = \begin{bmatrix}\left<5, F\right>\end{bmatrix}
+                            \end{align*}
+    
+                            \item Before $quadruplesMerged$ \cref{insertionseriesSortMerge before merge}
+                            \begin{align*}
+                                tuples1 & = \begin{bmatrix}\left<3, D, 1, 0\right>\end{bmatrix} \\
+                                tuples2 & = \begin{bmatrix}\left<5, F, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{merge}
+    
+                            \item After $quadruplesMerged$ \cref{insertionseriesSortMerge after merge}
+                            \begin{align*}
+                                quadruplesMerged = \left[\left<3, D, 1, 0\right> \ \left<5, F, 0, 0\right>\right]
+                            \end{align*}
+    
+                            \item After $inverse$ \cref{insertionseriesSortMerge after inverses}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+    
+                            \item Before $offsets$ \cref{insertionseriesSortMerge before prefixSum}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{prefixSum}
+    
+                            \item After $offsets$ \cref{insertionseriesSortMerge after prefixSum}
+                            \begin{align*}
+                                offsets = \begin{bmatrix}0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+    
+                            \item After $result$ \cref{insertionseriesSortMerge after fix}
+                            \begin{align*}
+                                result = \begin{bmatrix}\left<3, D\right> & \left<5, F\right>\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.4\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples$: the array of tuples to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortRecursive}{$tuples$}
+                                            \label{insertionseriesSortRecursive input}
+                                            \If{$tuples.size \leq 1$}
+                                                \label{insertionseriesSortRecursive base case}
+                                                \State $result \gets tuples$
+                                                \State \Return $result$
+                                            \EndIf
+                    
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{tuples.size}{2}$}
+                                                \State $left{\left[i\right]} \gets tuples{\left[i\right]}$
+                                            \EndFor 
+                                            \State $right \gets \left[\ \right]$
+                                            \For{$j = \frac{tuples.size}{2}$ \textnormal{\textbf{to}} $tuples.size$}
+                                                \State $right{\left[j\right]} \gets tuples{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{insertionseriesSortRecursive before leftSorted}
+                                            \State $leftSorted \gets \Call{insertionseriesSortRecursive}{left}$
+                                            \label{insertionseriesSortRecursive after leftsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before rightSorted}
+                                            \State $rightSorted \gets \Call{insertionseriesSortRecursive}{right}$
+                                            \label{insertionseriesSortRecursive after rightsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                                            \State $result \gets \Call{insertionseriesSortMerge}{leftSorted, rightSorted}$
+                                            \label{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                    
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.6\textwidth}
+                    \vspace{-0.05cm}
+                    \tiny
+                    \noindent \scalebox{0.88}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begin{multicols}{3}
+                                \begin{itemize}
+                                    \item After $result$ \cref{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                                    \begin{align*}
+                                        result = \begin{bmatrix}\left<3, D\right> & \left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item After $leftSorted$ \cref{insertionseriesSortRecursive after leftsorted}
+                                    \begin{align*}
+                                        leftSorted = \begin{bmatrix}\left<3, D\right> \ \left<5, F\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $rightSorted$ \cref{insertionseriesSortRecursive before rightSorted}
+                                    \begin{align*}
+                                        right = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortRecursive}
+        
+                                    \item Input \cref{insertionseriesSortRecursive input}
+                                    \begin{align*}
+                                        tuples = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $leftSorted$ \cref{insertionseriesSortRecursive before leftSorted}
+                                    \begin{align*}
+                                        left = \begin{bmatrix}\left<0, A\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortRecursive}
+        
+                                    \item Base case \cref{insertionseriesSortRecursive base case}
+                                    \begin{align*}
+                                        tuples = \begin{bmatrix}\left<0, A\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+        
+                                    \item After $leftSorted$ \cref{insertionseriesSortRecursive after leftsorted}
+                                    \begin{align*}
+                                        leftSorted = \begin{bmatrix}\left<0, A\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $rightSorted$ \cref{insertionseriesSortRecursive before rightSorted}
+                                    \begin{align*}
+                                        right = \begin{bmatrix}\left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortRecursive}
+        
+                                    \item Base case \cref{insertionseriesSortRecursive base case}
+                                    \begin{align*}
+                                        tuples = \begin{bmatrix}\left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Return
+        
+                                    \item After $rightSorted$ \cref{insertionseriesSortRecursive after rightsorted}
+                                    \begin{align*}
+                                        rightSorted = \begin{bmatrix}\left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    \item Before $result$ \cref{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                                    \begin{align*}
+                                        leftSorted & = \begin{bmatrix}\left<0, A\right>\end{bmatrix} \\
+                                        rightSorted & = \begin{bmatrix}\left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{insertionseriesSortMerge}
+                                \end{itemize}
+                            \end{multicols}
+                        \end{minipage}
+                    }
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_merge
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.2cm}
+            \begin{columns}[c]
+                \begin{column}{0.35\textwidth}
+                    \noindent \scalebox{0.58}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_merge Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples1$: the first array of tuples that needs to be merged
+                                            \Statex $tuples2$: the second array of tuples that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortMerge}{$tuples1, tuples2$}
+                                            \label{insertionseriesSortMerge input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \State $quadruples2 \gets \left[\ \right]$
+                        
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $tuples1.size$}
+                                                \State $\left<position, element\right> \gets tuples1{\left[i\right]}$
+                                                \State $quadruples1{\left[i\right]} \gets \left<position, element, \texttt{fromT1}, 0\right>$
+                                            \EndFor
+                        
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $tuples2.size$}
+                                                \State $\left<position, element\right> \gets tuples2{\left[j\right]}$
+                                                \State $quadruples2{\left[i\right]} \gets \left<position - j, element, \texttt{fromT2}, j\right>$
+                                            \EndFor
+                                            
+                                            \label{insertionseriesSortMerge before merge}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{insertionseriesSortMerge after merge}
+                        
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromTuple, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromTuple$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after inverses}
+
+                                            \label{insertionseriesSortMerge before prefixSum}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{insertionseriesSortMerge after prefixSum}
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<key, value, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                
+                                                \State $result{\left[i\right]} \gets \left<key + offsets{\left[i\right]}, value\right>$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after fix}
+                                            
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.65\textwidth}
+                    \vspace{-0.3cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{insertionseriesSortMerge input}
+                            \begin{align*}
+                                tuples1 & = \begin{bmatrix}\left<0, A\right>\end{bmatrix} \\
+                                tuples2 & = \begin{bmatrix}\left<8, I\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $quadruplesMerged$ \cref{insertionseriesSortMerge before merge}
+                            \begin{align*}
+                                tuples1 & = \begin{bmatrix}\left<0, A, 1, 0\right>\end{bmatrix} \\
+                                tuples2 & = \begin{bmatrix}\left<8, I, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{merge}
+
+                            \item After $quadruplesMerged$ \cref{insertionseriesSortMerge after merge}
+                            \begin{align*}
+                                quadruplesMerged = \begin{bmatrix}\left<0, A, 1, 0\right> \ \left<8, I, 0, 0\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item After $inverses$ \cref{insertionseriesSortMerge after inverses}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $offsets$ \cref{insertionseriesSortMerge before prefixSum}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{prefixSum}
+
+                            \item After $offsets$ \cref{insertionseriesSortMerge after prefixSum}
+                            \begin{align*}
+                                offsets = \begin{bmatrix}0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item After $result$ \cref{insertionseriesSortMerge after fix}
+                            \begin{align*}
+                                result = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.4\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples$: the array of tuples to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortRecursive}{$tuples$}
+                                            \label{insertionseriesSortRecursive input}
+                                            \If{$tuples.size \leq 1$}
+                                                \label{insertionseriesSortRecursive base case}
+                                                \State $result \gets tuples$
+                                                \State \Return $result$
+                                            \EndIf
+                    
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{tuples.size}{2}$}
+                                                \State $left{\left[i\right]} \gets tuples{\left[i\right]}$
+                                            \EndFor 
+                                            \State $right \gets \left[\ \right]$
+                                            \For{$j = \frac{tuples.size}{2}$ \textnormal{\textbf{to}} $tuples.size$}
+                                                \State $right{\left[j\right]} \gets tuples{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{insertionseriesSortRecursive before leftSorted}
+                                            \State $leftSorted \gets \Call{insertionseriesSortRecursive}{left}$
+                                            \label{insertionseriesSortRecursive after leftsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before rightSorted}
+                                            \State $rightSorted \gets \Call{insertionseriesSortRecursive}{right}$
+                                            \label{insertionseriesSortRecursive after rightsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                                            \State $result \gets \Call{insertionseriesSortMerge}{leftSorted, rightSorted}$
+                                            \label{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                    
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.6\textwidth}
+                    \tiny
+                    % \begin{multicols}{3}
+                        \begin{itemize}
+                            \item After $result$ \cref{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                            \begin{align*}
+                                result = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item After $rightSorted$ \cref{insertionseriesSortRecursive after rightsorted}
+                            \begin{align*}
+                                rightSorted = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $result$ \cref{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                            \begin{align*}
+                                leftSorted & = \begin{bmatrix}\left<3, D\right> & \left<5, F\right>\end{bmatrix} \\
+                                rightSorted & = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{insertionseriesSortMerge}
+                        \end{itemize}
+                    % \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_merge
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.2cm}
+            \begin{columns}[c]
+                \begin{column}{0.3\textwidth}
+                    \noindent \scalebox{0.54}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_merge Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples1$: the first array of tuples that needs to be merged
+                                            \Statex $tuples2$: the second array of tuples that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortMerge}{$tuples1, tuples2$}
+                                            \label{insertionseriesSortMerge input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \State $quadruples2 \gets \left[\ \right]$
+                        
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $tuples1.size$}
+                                                \State $\left<position, element\right> \gets tuples1{\left[i\right]}$
+                                                \State $quadruples1{\left[i\right]} \gets \left<position, element, \texttt{fromT1}, 0\right>$
+                                            \EndFor
+                        
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $tuples2.size$}
+                                                \State $\left<position, element\right> \gets tuples2{\left[j\right]}$
+                                                \State $quadruples2{\left[i\right]} \gets \left<position - j, element, \texttt{fromT2}, j\right>$
+                                            \EndFor
+                                            
+                                            \label{insertionseriesSortMerge before merge}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{insertionseriesSortMerge after merge}
+                        
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromTuple, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromTuple$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after inverses}
+
+                                            \label{insertionseriesSortMerge before prefixSum}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{insertionseriesSortMerge after prefixSum}
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<key, value, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                
+                                                \State $result{\left[i\right]} \gets \left<key + offsets{\left[i\right]}, value\right>$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after fix}
+                                            
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.7\textwidth}
+                    \vspace{-0.3cm}
+                    \tiny
+                    \begin{multicols}{2}
+                        \begin{itemize}
+                            \item Input \cref{insertionseriesSortMerge input}
+                            \begin{align*}
+                                tuples1 & = \begin{bmatrix}\left<3, D\right> & \left<5, F\right>\end{bmatrix} \\
+                                tuples2 & = \begin{bmatrix}\left<0, A\right> & \left<8, I\right>\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $quadruplesMerged$ \cref{insertionseriesSortMerge before merge}
+                            \begin{align*}
+                                tuples1 & = \begin{bmatrix}\left<3, D, 1, 0\right> & \left<5, F, 1, 0\right>\end{bmatrix} \\
+                                tuples2 & = \begin{bmatrix}\left<0, A, 0, 0\right> & \left<7, I, 0, 1\right>\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{merge}
+
+                            \item After $quadruplesMerged$ \cref{insertionseriesSortMerge after merge}
+                            \begin{align*}
+                                quadruplesMerged = & \left[\left<0, A, 0, 0\right> \ \left<3, D, 1, 0\right>\right. \\ 
+                                & \left.\left<5, F, 1, 0\right> \ \left<7, I, 0, 1\right>\right]
+                            \end{align*}
+
+                            \item After $inverses$ \cref{insertionseriesSortMerge after inverses}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}1 & 0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            \item Before $offsets$ \cref{insertionseriesSortMerge before prefixSum}
+                            \begin{align*}
+                                inverses = \begin{bmatrix}1 & 0 & 0 & 1\end{bmatrix}
+                            \end{align*}
+
+                            Call \textsc{prefixSum}
+
+                            \item After $offsets$ \cref{insertionseriesSortMerge after prefixSum}
+                            \begin{align*}
+                                offsets = \begin{bmatrix}0 & 1 & 1 & 1 & 2\end{bmatrix}
+                            \end{align*}
+
+                            \item After $result$ \cref{insertionseriesSortMerge after fix}
+                            \begin{align*}
+                                result = & \left[\left<0, A\right> \ \left<4, D\right>\right. \\ 
+                                & \left.\left<6, F\right> \ \left<8, I\right>\right]
+                            \end{align*}
+                        \end{itemize}
+                    \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.4\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_recursive Function}
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples$: the array of tuples to be sort
+                                        \Ensure
+                                            \Statex $result$: the sorted array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortRecursive}{$tuples$}
+                                            \label{insertionseriesSortRecursive input}
+                                            \If{$tuples.size \leq 1$}
+                                                \label{insertionseriesSortRecursive base case}
+                                                \State $result \gets tuples$
+                                                \State \Return $result$
+                                            \EndIf
+                    
+                                            \State $left \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $\frac{tuples.size}{2}$}
+                                                \State $left{\left[i\right]} \gets tuples{\left[i\right]}$
+                                            \EndFor 
+                                            \State $right \gets \left[\ \right]$
+                                            \For{$j = \frac{tuples.size}{2}$ \textnormal{\textbf{to}} $tuples.size$}
+                                                \State $right{\left[j\right]} \gets tuples{\left[j\right]}$
+                                            \EndFor
+
+                                            \label{insertionseriesSortRecursive before leftSorted}
+                                            \State $leftSorted \gets \Call{insertionseriesSortRecursive}{left}$
+                                            \label{insertionseriesSortRecursive after leftsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before rightSorted}
+                                            \State $rightSorted \gets \Call{insertionseriesSortRecursive}{right}$
+                                            \label{insertionseriesSortRecursive after rightsorted}
+                                            
+                                            \label{insertionseriesSortRecursive before insertionseriesSortMerge result}
+                                            \State $result \gets \Call{insertionseriesSortMerge}{leftSorted, rightSorted}$
+                                            \label{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                    
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.6\textwidth}
+                    % \tiny
+                    % \begin{multicols}{3}
+                        \begin{itemize}
+                            \item After $result$ \cref{insertionseriesSortRecursive after insertionseriesSortMerge result}
+                            \begin{align*}
+                                result = \begin{bmatrix}\left<0, A\right> & \left<4, D\right> & \left<6, F\right> & \left<8, I\right>\end{bmatrix}
+                            \end{align*}
+                        \end{itemize}
+                    % \end{multicols}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_merge\_after\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.45\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_merge\_after\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array in which new elements will be added
+                                            \Statex $tuples$: the array of positions and elements to be added
+                                        \Ensure
+                                            \Statex $result$: the array containing the old elements and the new ones inserted in the specified positions
+                                        \Statex
+                        
+                                        \Function{insertionseriesMergeAfterSortRecursive}{$array, tuples$}
+                                            \State $arrayTuple \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $arrayTuple \gets \left<i, array{\left[i\right]}\right>$
+                                            \EndFor 
+
+                                            \label{insertionseriesMergeAfterSortRecursive before insertionseriesSortRecursive}
+                                            \State $tuplesSorted \gets \Call{insertionseriesSortRecursive}{tuples}$
+                                            \label{insertionseriesMergeAfterSortRecursive after tuplesSorted}
+
+                                            \label{insertionseriesMergeAfterSortRecursive before mergedTuples}
+                                            \State $mergedTuples \gets \Call{insertionseriesSortMerge}{arrayTuple, tuplesSorted}$
+                                            \label{insertionseriesMergeAfterSortRecursive after mergedTuples}
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $mergedTuples.size$}
+                                                \State $\left<\_, value\right> \gets mergedTuples{\left[i\right]}$
+                                                \State $result{\left[i\right]} \gets value$
+                                            \EndFor
+                                            \label{insertionseriesMergeAfterSortRecursive after result}
+                        
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.55\textwidth}
+                    \scriptsize
+                    \begin{itemize}
+                        \item After $tuplesSorted$ \cref{insertionseriesMergeAfterSortRecursive after tuplesSorted}
+                        \begin{align*}
+                            array & = \begin{bmatrix}1 & 2 & 3 & 4 & 5\end{bmatrix} \\
+                            tuplesSorted & = \begin{bmatrix}\left<0, A\right> & \left<4, D\right> & \left<6, F\right> & \left<8, I\right>\end{bmatrix}
+                        \end{align*}
+
+                        \item Before $mergedTuples$ \cref{insertionseriesMergeAfterSortRecursive before mergedTuples}
+                        \begin{align*}
+                            arrayTuple & = \begin{bmatrix}\left<0, 1\right> & \left<1, 2\right> & \left<2, 3\right> & \left<3, 4\right> & \left<4, 5\right>\end{bmatrix} \\
+                            tuplesSorted & = \begin{bmatrix}\left<0, A\right> & \left<4, D\right> & \left<6, F\right> & \left<8, I\right>\end{bmatrix}
+                        \end{align*}
+
+                        Call \textsc{insertionseriesSortMerge}
+                    \end{itemize}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_sort\_merge
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.2cm}
+            \begin{columns}[c]
+                \begin{column}{0.3\textwidth}
+                    \noindent \scalebox{0.54}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_sort\_merge Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $tuples1$: the first array of tuples that needs to be merged
+                                            \Statex $tuples2$: the second array of tuples that needs to be merged
+                                        \Ensure
+                                            \Statex $result$: the ordered union of the two input array of tuples
+                                        \Statex
+                        
+                                        \Function{insertionseriesSortMerge}{$tuples1, tuples2$}
+                                            \label{insertionseriesSortMerge input}
+                                            \State $quadruples1 \gets \left[\ \right]$
+                                            \State $quadruples2 \gets \left[\ \right]$
+                        
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $tuples1.size$}
+                                                \State $\left<position, element\right> \gets tuples1{\left[i\right]}$
+                                                \State $quadruples1{\left[i\right]} \gets \left<position, element, \texttt{fromT1}, 0\right>$
+                                            \EndFor
+                        
+                                            \For{$j = 0$ \textnormal{\textbf{to}} $tuples2.size$}
+                                                \State $\left<position, element\right> \gets tuples2{\left[j\right]}$
+                                                \State $quadruples2{\left[i\right]} \gets \left<position - j, element, \texttt{fromT2}, j\right>$
+                                            \EndFor
+                                            
+                                            \label{insertionseriesSortMerge before merge}
+                                            \State $quadruplesMerged \gets \Call{merge}{quadruples1, quadruples2}$
+                                            \label{insertionseriesSortMerge after merge}
+                        
+                                            \State $inverses \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<\_, \_, fromTuple, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                \State $inverses{\left[i\right]} \gets 1 - fromTuple$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after inverses}
+
+                                            \label{insertionseriesSortMerge before prefixSum}
+                                            \State $offsets \gets \Call{prefixSum}{inverses}$
+                                            \label{insertionseriesSortMerge after prefixSum}
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $quadruplesMerged.size$}
+                                                \State $\left<key, value, \_, \_\right> \gets quadruplesMerged{\left[i\right]}$
+                                                
+                                                \State $result{\left[i\right]} \gets \left<key + offsets{\left[i\right]}, value\right>$
+                                            \EndFor
+                                            \label{insertionseriesSortMerge after fix}
+                                            
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.7\textwidth}
+                    \vspace{-0.05cm}
+                    \tiny
+                    \noindent \scalebox{0.9}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begin{multicols}{2}
+                                \begin{itemize}
+                                    \item Input \cref{insertionseriesSortMerge input}
+                                    \begin{align*}
+                                        tuples1 & = \begin{bmatrix}\left<0, 1\right> \ \left<1, 2\right> \ \left<2, 3\right> \ \left<3, 4\right> \ \left<4, 5\right>\end{bmatrix} \\
+                                        tuples2 & = \begin{bmatrix}\left<0, A\right> \ \left<4, D\right> \ \left<6, F\right> \ \left<8, I\right>\end{bmatrix}
+                                    \end{align*}
+                                    
+                                    \item Before $quadruplesMerged$ \cref{insertionseriesSortMerge before merge}
+                                    \begin{align*}
+                                        tuples1 = & \left[\left<0, 1, 1, 0\right> \ \left<1, 2, 1, 0\right> \ \left<2, 3, 1, 0\right> \right.\\
+                                        & \left.\left<3, 4, 1, 0\right> \ \left<4, 5, 1, 0\right>\right] \\
+                                        tuples2 = & \left[\left<0, A, 0, 0\right> \ \left<3, D, 0, 1\right>\right. \\
+                                        & \left.\left<4, F, 0, 2\right> \ \left<5, I, 0, 3\right>\right]
+                                    \end{align*}
+        
+                                    Call \textsc{merge}
+                                    
+                                    \item After $quadruplesMerged$ \cref{insertionseriesSortMerge after merge}
+                                    \begin{align*}
+                                        quadruplesMerged = & \left[\left<0, A, 0, 0\right> \ \left<0, 1, 1, 0\right>\right. \\ 
+                                        & \left.\left<1, 2, 1, 0\right> \ \left<2, 3, 1, 0\right>\right. \\
+                                        & \left.\left<3, D, 0, 1\right> \ \left<3, 4, 1, 0\right>\right. \\
+                                        & \left.\left<4, F, 0, 2\right> \ \left<4, 5, 1, 0\right> \ \left<5, I, 0, 3\right>\right]
+                                    \end{align*}
+                                    
+                                    \item After $inverses$ \cref{insertionseriesSortMerge after inverses}
+                                    \begin{align*}
+                                        inverses = \begin{bmatrix}1 \ 0 \ 0 \ 0 \ 1 \ 0 \ 1 \ 0 \ 1\end{bmatrix}
+                                    \end{align*}
+                                    
+                                    \item Before $offsets$ \cref{insertionseriesSortMerge before prefixSum}
+                                    \begin{align*}
+                                        inverses = \begin{bmatrix}1 \ 0 \ 0 \ 0 \ 1 \ 0 \ 1 \ 0 \ 1\end{bmatrix}
+                                    \end{align*}
+        
+                                    Call \textsc{prefixSum}
+                                    
+                                    \item After $offsets$ \cref{insertionseriesSortMerge after prefixSum}
+                                    \begin{align*}
+                                        offsets = \begin{bmatrix}0 \ 1 \ 1 \ 1 \ 1 \ 2 \ 2 \ 3 \ 3 \ 4\end{bmatrix}
+                                    \end{align*}
+                                    
+                                    \item After $result$ \cref{insertionseriesSortMerge after fix}
+                                    \begin{align*}
+                                        result = & \left[\left<0, A\right> \ \left<1, 1\right> \ \left<2, 2\right>\right. \\ 
+                                        & \left.\left<3, 3\right> \ \left<4, D\right> \ \left<5, 4\right>\right. \\ 
+                                        & \left.\left<6, F\right> \ \left<7, 5\right> \ \left<8, I\right>\right]
+                                    \end{align*}
+                                \end{itemize}
+                            \end{multicols}
+                        \end{minipage}
+                    }
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+% TODO insertionseries\_merge\_after\_sort\_recursive
+        \begin{frame}[containsverbatim]{\insertionseriesexampleframe}
+            \vspace{-0.3cm}
+            \begin{columns}[c]
+                \begin{column}{0.45\textwidth}
+                    \noindent \scalebox{0.8}{
+                        \begin{minipage}[c]{\textwidth}
+                            \begingroup
+                                \makeatletter
+                                \renewcommand{\alglinenumber}[1]{\tiny#1}
+                                \makeatother
+                                \begin{algorithm}[H]
+                                    \tiny
+                                    \caption{insertionseries\_merge\_after\_sort\_recursive Function} 
+                                    \begin{algorithmic}[1]
+                                        \Require 
+                                            \Statex $array$: the array in which new elements will be added
+                                            \Statex $tuples$: the array of positions and elements to be added
+                                        \Ensure
+                                            \Statex $result$: the array containing the old elements and the new ones inserted in the specified positions
+                                        \Statex
+                        
+                                        \Function{insertionseriesMergeAfterSortRecursive}{$array, tuples$}
+                                            \State $arrayTuple \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $array.size$}
+                                                \State $arrayTuple \gets \left<i, array{\left[i\right]}\right>$
+                                            \EndFor 
+
+                                            \label{insertionseriesMergeAfterSortRecursive before insertionseriesSortRecursive}
+                                            \State $tuplesSorted \gets \Call{insertionseriesSortRecursive}{tuples}$
+                                            \label{insertionseriesMergeAfterSortRecursive after tuplesSorted}
+
+                                            \label{insertionseriesMergeAfterSortRecursive before mergedTuples}
+                                            \State $mergedTuples \gets \Call{insertionseriesSortMerge}{arrayTuple, tuplesSorted}$
+                                            \label{insertionseriesMergeAfterSortRecursive after mergedTuples}
+                        
+                                            \State $result \gets \left[\ \right]$
+                                            \For{$i = 0$ \textnormal{\textbf{to}} $mergedTuples.size$}
+                                                \State $\left<\_, value\right> \gets mergedTuples{\left[i\right]}$
+                                                \State $result{\left[i\right]} \gets value$
+                                            \EndFor
+                                            \label{insertionseriesMergeAfterSortRecursive after result}
+                        
+                                            \State \Return $result$
+                                        \EndFunction
+                                    \end{algorithmic}
+                                \end{algorithm}
+                            \endgroup
+                        \end{minipage}
+                    }
+                \end{column}
+
+                \begin{column}{0.55\textwidth}
+                    \scriptsize
+                    \begin{itemize}
+                        \item After $mergedTuples$ \cref{insertionseriesMergeAfterSortRecursive after mergedTuples}
+                        \begin{align*}
+                            mergedTuples = & \left[\left<0, A\right> \ \left<1, 1\right> \ \left<2, 2\right> \ \left<3, 3\right>\right. \\ 
+                            & \left.\left<4, D\right> \ \left<5, 4\right> \ \left<6, F\right> \ \left<7, 5\right> \ \left<8, I\right>\right]
+                        \end{align*}
+
+                        \item After $result$ \cref{insertionseriesMergeAfterSortRecursive after result}
+                        \begin{align*}
+                            result = \begin{bmatrix}A & 1 & 2 & 3 & D & 4 & F & 5 & I\end{bmatrix}
+                        \end{align*}
+                    \end{itemize}
+                \end{column}
+            \end{columns}
+        \end{frame}
+
+
+        
+
+
+
+
+
+
+
+
+
+
+        
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Insertion Series Conclusion subsection %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \subsection{Insertion Series Conclusion}
+        \begin{frame}{Comparison Between Naive and DJB Versions}
+            \vspace{-0.1cm}
+            Let $n \coloneqq$ the size of the array to which new elements are added and $m \coloneqq$ the size of the array of $\left<position, element\right>$ to be added.
+            \begin{align*}
+                \mathcal{C}_{naive}{\left(n, m\right)} & = \mathcal{O}{\left(m \cdot n\right)} \\
+                \\
+                \mathcal{C}_{DJB}{\left(n, m\right)} & = \mathcal{O}{\left(\left(n + m\right) \cdot \left(\log{\left(n + m\right)}\right)^2 + m \cdot \left(\log{\left(m\right)}\right)^3\right)} \\
+            \end{align*}
+    
+            Thus for large sizes of $n, m$ the algorithm devised by DJB speeds up the insertion of multiples of elements into an array at the same time.
+    
+            Obviously if you only want to insert only a single element, the best algorithm is the naive one which has $\mathcal{O}{\left(n\right)}$ complexity and not DJB which has $\mathcal{O}{\left(n \cdot \left(\log{\left(n\right)}\right)^2\right)}$ instead.
+        \end{frame}
+    
+        \begin{frame}{Using Parallelisation}
+            To try to gain computation time, the technique of parallelization can be used.  
+
+            In this algorithm, the functions that can be parallelized are essentially \textsc{merge} and \textsc{prefixSum}.
+
+            \begin{itemize}
+                \item \textsc{merge}: it was designed to be easily parallelised. The \textit{bitonic sort} network was chosen to sort the data, an algorithm particularly suited to parallelisation due to its regular and predetermined structure.
+                \item \textsc{prefixSum}: the parallel version must be modified slightly as it is not suitable for parallelization as it stands. Therefore, the parallel version divides the input into blocks managed by separate threads, which compute the partial sums of their segments in parallel. Next, each thread updates its results by adding the offsets computed from the sums of the previous threads.
+            \end{itemize}
+        \end{frame}
+
+        \begin{frame}{Constant-Time}
+            The algorithm was implemented using a constant-time approach.
+
+            \leavevmode
+
+            All data-dependent branches were eliminated and replaced with mux bitmasks for conditional selection. All comparison and swap operations are branchless.
+
+            This approach allows us to minimise the possibility of side-channel attacks, as there are no data-dependent branches.
+        \end{frame}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
